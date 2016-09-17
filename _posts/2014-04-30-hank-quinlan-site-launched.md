@@ -1,7 +1,9 @@
 ---
 layout: post
-title: "Hank Quinlan, Horrible Cop, Launches Site"
-date: 2014-04-30
+title: "Migrating from Wordpress"
+date: 2016-09-17
 ---
 
-Well. Finally got around to putting this old website together. Neat thing about it - powered by [Jekyll](http://jekyllrb.com) and I can use Markdown to author my posts. It actually is a lot easier than I thought it was going to be.
+<p> I've been working on some RMarkdown scripting today. I was planning to use it to write a blogpost to go up on <a href = "http://timefreq.wordpress.com">The Time-Frequency Transform</a>, which has been gathering dust for a year or two now. It seems like a bit of a faff to convert it to a Wordpress friendly format, so naturally I decided to create an entire new website for myself over here on Github. Obviously that's bound to be a lot less work. </p>
+
+
