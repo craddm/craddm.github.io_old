@@ -1,3 +1,5 @@
-name: Hank Quinlan, Horrible Cop
+name: Matt Craddock
 markdown: kramdown
 permalink: /blog/:year/:month/:day/:title
+baseurl: "/"
+url: "http://craddm.github.io"
