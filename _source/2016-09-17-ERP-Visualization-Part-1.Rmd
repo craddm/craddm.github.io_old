@@ -10,13 +10,15 @@ layout: post
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-ERP visualization is hard. It's very common for grand average ERP data to be plotted as simple traces, with no information regarding variability. There a couple of variations on this simple theme which show regions of significance, but it's extremely rare to show anything else. A new editorial letter by Rousselet, Foxe, and Bolam in the European Journal of Neuroscience offers some <a href ="http://http://onlinelibrary.wiley.com/doi/10.1111/ejn.13400/epdf">useful guidelines</a>, and Ana Todorovic's recent <a href="http://neuroanatody.com/2016/09/scatterplotting-time-series/">post on adding scatterplots to time-series data </a>is also great. 
+ERP visualization is hard. It's very common for grand average ERP data to be plotted as simple traces representing condition means, with no information regarding variability around these means. There are a couple of variations on this simple theme which show regions of significance, but it's extremely rare to show anything else. A new editorial letter by Rousselet, Foxe, and Bolam in the European Journal of Neuroscience offers some <a href ="http://http://onlinelibrary.wiley.com/doi/10.1111/ejn.13400/epdf">useful guidelines</a>, and Ana Todorovic's recent <a href="http://neuroanatody.com/2016/09/scatterplotting-time-series/">post on adding scatterplots to time-series data </a>is also great. 
 
 I do all my processing of EEG data in Matlab, using EEGLAB and ERPLAB, but I typically switch over to R when it's time to do the statistics on individual ERP components. In general I love the R package ggplot2 for graphs, so it feels natural to me to try plotting the ERPs using ggplot2. These posts are not intended to codify right or wrong answers on how to visually represent ERPs. Rather, they're my attempt to explore some of the options, get a feel for what's good and bad about each approach, and work out how to actually make these plots in R.
 
 ## The data
 
-For convenience I've taken some data from a study that we published a while back <a href="#craddock">[1]</a>. The design was repeated measures 2 x 3 factorial: Object (object vs non-object) and Spatial Frequency (high, broadband, low). For Part 1, I'm going to stick to the main effect of Object. I'll get on to the effect of frequency and the interaction in later posts, which will also be a good opportunity to show some of the difficulties with applying some of the guidelines from the letter to designs that have more than two conditions.
+For convenience I've taken some data from a study that we published a last year <a href="#craddock">[1]</a>. We used a 2 x 3 factorial repeated measures design, with the factors Object (object vs non-object) and Spatial Frequency (high, broadband, low). Check out the article itself for more details. 
+
+For this first post, I'm going to stick to the main effect of Object. I'll get on to the effect of frequency and the interaction in later posts, which will also be a good opportunity to show some of the difficulties with applying some of the guidelines from the letter to designs that have more than two conditions.
 
 Behind the cut is some code to load in my pre-processed data and whip it into shape. The pre-processed data is four columns containing the amplitude value for each time point for each subject for each condition.
 
@@ -35,7 +37,7 @@ levCatGA <- melt(levCatGA,id.vars = c("Subject","Time"))
 
 Here's an example of a typical basic ERP plot:
 
-```{r basicPlot, fig.height = 3, fig.width = 6}
+```{r basicPlot, fig.height = 4, fig.width = 7}
 levCat.plot <- ggplot(levCatGA,aes(Time,value))+scale_color_brewer(palette = "Set1")+theme_minimal()
 levCat.plot+
   stat_summary(fun.y = mean,geom = "line",size = 1,aes(colour = variable))+
@@ -45,7 +47,7 @@ levCat.plot+
 The individual lines are the condition means of the ERPs at a cluster of right occipital electrodes. 
 As you can see, there's no depiction of the variability around the condition means. The simplest way of showing this variability is to add some measure of dispersion around the mean. Let's add shaded areas representing 95% confidence intervals. These confidence intervals are bootstrapped, so if you reproduce this plot, they might differ slightly.
 
-```{r CIPlot,fig.height = 3, fig.width = 6}
+```{r CIPlot,fig.height = 4, fig.width = 7}
 levCat.plot+
   stat_summary(fun.data = mean_cl_boot,geom = "ribbon",size = 1,aes(fill = variable),alpha = 0.3)+
   guides(fill = "none")+
@@ -59,7 +61,7 @@ However, my data is repeated measures, so these CIs are not massively helpful he
 
 Another way of showing the variability around the mean is to plot the individual subject data as well as the mean:
 
-```{r indivAndGroup, fig.height = 4, fig.width = 6}
+```{r indivAndGroup, fig.height = 4, fig.width = 8}
 levCat.plot+
   geom_line(aes(group = interaction(Subject,variable),colour = variable,alpha = 0.2))+
   guides(alpha= "none")+
@@ -72,7 +74,7 @@ levCat.plot+
 
 I've also included here the CI around the condition means. As you can probably see, it's getting a little messy. It's hard to actually pick out individual subjects, and I have no idea which line belongs to which participant. Nevertheless, I can see the initial positive peaks kind of smears over what look like a bunch of short individual peaks that are quite jittered around in time from 80 ms to 120 ms. And although a majority of participants seem to be showing a negative going deflection, peaking around 180 ms, some clearly aren't. Let's try without the group means:
 
-```{r indivNoGroup, fig.height = 4, fig.width = 6}
+```{r indivNoGroup, fig.height = 4, fig.width = 8}
 levCat.plot+
   geom_line(aes(group = interaction(Subject,variable),colour = variable,alpha = 0.2))+
   guides(alpha= "none")+
@@ -80,7 +82,7 @@ levCat.plot+
   labs(x = "Time (ms)",y = expression(paste("Amplitude (",mu,"V)")),colour = "")
 ```
 
-Maybe a little better, but I'm struggling to differentiate lines form different conditions. Let's split the plot by condition to try to make things a little more readable.
+Maybe a little better, but I'm struggling to differentiate lines from different conditions. Let's split the plot by condition to try to make things a little more readable.
 
 ```{r condSplit, fig.height = 4, fig.width = 8}
 levCat.plot+
@@ -109,7 +111,7 @@ It's good, but personally I prefer to have the condition summary on there too.
 
 All well and good, but let's not forget that what we're really interested in is the difference between the two conditions. We can get at that by plotting the difference between them. Here's a plot showing the condition means and the difference wave, again with 95% bootstrapped confidence intervals. In this case, I've subtract the non-object condition from the object condition, so positive values in the difference wave indicate that the Object condition has higher amplitude, while negative values show that the non-object has higher amplitude.
 
-```{r diffPlot, fig.height = 3, fig.width = 6}
+```{r diffPlot, fig.height = 4, fig.width = 7}
 levCat.plot+
   stat_summary(fun.data = mean_cl_boot,geom = "ribbon",alpha = 0.3,aes(fill = variable))+
   guides(fill = "none")+
@@ -123,7 +125,7 @@ levCat.plot+
 Note that the confidence interval round the difference wave *is* useful, which isn't really the case for the CIs around the condition means, since now it's showing the variability of the within-subject differences. Note that it's generally narrower than the CIs around the condition means. 
 There are couple of different ways to plot within-participant confidence intervals which you could plot around the conditions means or the difference, if you liked - I may get back to that some other time. But for the moment, let's just let R do it, and let's keep going with the difference wave. Let's try a version with both the group and individual difference waves, and without the condition means.
 
-```{r indivDiffPlot, fig.height = 3, fig.width = 6}
+```{r indivDiffPlot, fig.height = 4, fig.width = 7}
 levCatDiff.plot <- ggplot(levCatDiff,aes(Time,value))+scale_color_brewer(palette = "Set1")+theme_minimal()
 levCatDiff.plot+
   labs(x = "Time (ms)", y = expression(paste("Amplitude (",mu,"V)")),colour = "")+
@@ -136,5 +138,5 @@ In this version of the plot you can see that the difference wave starts to diver
 
 ### References
 <div id="craddock">
-<p>Craddock, M., Martinovic, J., & M?ller, M. M. (2015). Early and late effects of objecthood and spatial frequency on event-related potentials and gamma band activity. BMC Neuroscience, 16(1), 6. <a href ="http://doi.org/10.1186/s12868-015-0144-8">doi</a></p>
+<p>Craddock, M., Martinovic, J., & Mueller, M. M. (2015). Early and late effects of objecthood and spatial frequency on event-related potentials and gamma band activity. BMC Neuroscience, 16(1), 6. <a href ="http://doi.org/10.1186/s12868-015-0144-8">doi</a></p>
 </div>
