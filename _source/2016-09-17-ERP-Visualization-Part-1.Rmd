@@ -37,7 +37,7 @@ levCatGA <- melt(levCatGA,id.vars = c("Subject","Time"))
 
 Here's an example of a typical basic ERP plot:
 
-```{r basicPlot, fig.height = 4, fig.width = 7}
+```{r basicPlot, fig.height = 5, fig.width = 7}
 levCat.plot <- ggplot(levCatGA,aes(Time,value))+scale_color_brewer(palette = "Set1")+theme_minimal()
 levCat.plot+
   stat_summary(fun.y = mean,geom = "line",size = 1,aes(colour = variable))+
@@ -47,7 +47,7 @@ levCat.plot+
 The individual lines are the condition means of the ERPs at a cluster of right occipital electrodes. 
 As you can see, there's no depiction of the variability around the condition means. The simplest way of showing this variability is to add some measure of dispersion around the mean. Let's add shaded areas representing 95% confidence intervals. These confidence intervals are bootstrapped, so if you reproduce this plot, they might differ slightly.
 
-```{r CIPlot,fig.height = 4, fig.width = 7}
+```{r CIPlot,fig.height = 5, fig.width = 7}
 levCat.plot+
   stat_summary(fun.data = mean_cl_boot,geom = "ribbon",size = 1,aes(fill = variable),alpha = 0.3)+
   guides(fill = "none")+
@@ -61,7 +61,7 @@ However, my data is repeated measures, so these CIs are not massively helpful he
 
 Another way of showing the variability around the mean is to plot the individual subject data as well as the mean:
 
-```{r indivAndGroup, fig.height = 4, fig.width = 8}
+```{r indivAndGroup, fig.height = 5, fig.width = 8}
 levCat.plot+
   geom_line(aes(group = interaction(Subject,variable),colour = variable,alpha = 0.2))+
   guides(alpha= "none")+
@@ -74,7 +74,7 @@ levCat.plot+
 
 I've also included here the CI around the condition means. As you can probably see, it's getting a little messy. It's hard to actually pick out individual subjects, and I have no idea which line belongs to which participant. Nevertheless, I can see the initial positive peaks kind of smears over what look like a bunch of short individual peaks that are quite jittered around in time from 80 ms to 120 ms. And although a majority of participants seem to be showing a negative going deflection, peaking around 180 ms, some clearly aren't. Let's try without the group means:
 
-```{r indivNoGroup, fig.height = 4, fig.width = 8}
+```{r indivNoGroup, fig.height = 5, fig.width = 8}
 levCat.plot+
   geom_line(aes(group = interaction(Subject,variable),colour = variable,alpha = 0.2))+
   guides(alpha= "none")+
@@ -84,7 +84,7 @@ levCat.plot+
 
 Maybe a little better, but I'm struggling to differentiate lines from different conditions. Let's split the plot by condition to try to make things a little more readable.
 
-```{r condSplit, fig.height = 4, fig.width = 8}
+```{r condSplit, fig.height = 5, fig.width = 8}
 levCat.plot+
   facet_wrap(~variable)+
   geom_line(aes(group = Subject),alpha = 0.3)+
@@ -97,7 +97,7 @@ levCat.plot+
 
 This is certainly an improvement for understanding the variability around the mean for each condition; here's one last go without the group means.
 
-```{r condSplitNoMean, fig.height = 4, fig.width = 8}
+```{r condSplitNoMean, fig.height = 5, fig.width = 8}
 levCat.plot+
   facet_wrap(~variable)+
   geom_line(aes(group = Subject),alpha = 0.3)+
@@ -111,7 +111,7 @@ It's good, but personally I prefer to have the condition summary on there too.
 
 All well and good, but let's not forget that what we're really interested in is the difference between the two conditions. We can get at that by plotting the difference between them. Here's a plot showing the condition means and the difference wave, again with 95% bootstrapped confidence intervals. In this case, I've subtract the non-object condition from the object condition, so positive values in the difference wave indicate that the Object condition has higher amplitude, while negative values show that the non-object has higher amplitude.
 
-```{r diffPlot, fig.height = 4, fig.width = 7}
+```{r diffPlot, fig.height = 5, fig.width = 7}
 levCat.plot+
   stat_summary(fun.data = mean_cl_boot,geom = "ribbon",alpha = 0.3,aes(fill = variable))+
   guides(fill = "none")+
@@ -125,7 +125,7 @@ levCat.plot+
 Note that the confidence interval round the difference wave *is* useful, which isn't really the case for the CIs around the condition means, since now it's showing the variability of the within-subject differences. Note that it's generally narrower than the CIs around the condition means. 
 There are couple of different ways to plot within-participant confidence intervals which you could plot around the conditions means or the difference, if you liked - I may get back to that some other time. But for the moment, let's just let R do it, and let's keep going with the difference wave. Let's try a version with both the group and individual difference waves, and without the condition means.
 
-```{r indivDiffPlot, fig.height = 4, fig.width = 7}
+```{r indivDiffPlot, fig.height = 5, fig.width = 7}
 levCatDiff.plot <- ggplot(levCatDiff,aes(Time,value))+scale_color_brewer(palette = "Set1")+theme_minimal()
 levCatDiff.plot+
   labs(x = "Time (ms)", y = expression(paste("Amplitude (",mu,"V)")),colour = "")+
