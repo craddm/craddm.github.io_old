@@ -4,6 +4,7 @@ kramdown:
     # Use GitHub flavored markdown, including triple backtick fenced code blocks
     input: GFM
 permalink: /blog/:year/:month/:day/:title
-url: "http://craddm.github.io"
+url: "https://craddm.github.io"
 highlighter: rouge
-base-url: "/craddm.github.io/"
+baseurl: ""
+baseurlknitr: "/"

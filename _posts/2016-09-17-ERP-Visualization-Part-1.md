@@ -93,7 +93,7 @@ levCat.plot+
 
 ![plot of chunk indivNoGroup](/figure/source/2016-09-17-ERP-Visualization-Part-1/indivNoGroup-1.png)
 
-Maybe a little better, but I'm struggling to differentiate lines form different conditions. Let's split the plot by condition to try to make things a little more readable.
+Maybe a little better, but I'm struggling to differentiate lines from different conditions. Let's split the plot by condition to try to make things a little more readable.
 
 
 ```r
@@ -161,5 +161,5 @@ In this version of the plot you can see that the difference wave starts to diver
 
 ### References
 <div id="craddock">
-<p>Craddock, M., Martinovic, J., & M?ller, M. M. (2015). Early and late effects of objecthood and spatial frequency on event-related potentials and gamma band activity. BMC Neuroscience, 16(1), 6. <a href ="http://doi.org/10.1186/s12868-015-0144-8">doi</a></p>
+<p>Craddock, M., Martinovic, J., & Mueller, M. M. (2015). Early and late effects of objecthood and spatial frequency on event-related potentials and gamma band activity. BMC Neuroscience, 16(1), 6. <a href ="http://doi.org/10.1186/s12868-015-0144-8">doi</a></p>
 </div>
