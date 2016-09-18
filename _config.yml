@@ -1,5 +1,5 @@
 #Jekyll configuration
-name: Matt Craddock
+name: 'Matt Craddock'
 kramdown:
     # Use GitHub flavored markdown, including triple backtick fenced code blocks
     input: GFM
@@ -8,3 +8,5 @@ url: "https://craddm.github.io"
 highlighter: rouge
 baseurl: ""
 baseurlknitr: "/"
+
+title: "Matt Craddock"
