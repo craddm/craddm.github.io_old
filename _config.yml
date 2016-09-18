@@ -6,7 +6,7 @@ kramdown:
 permalink: /blog/:year/:month/:day/:title
 url: "https://craddm.github.io"
 highlighter: rouge
-baseurl: ""
+baseurl: "/"
 baseurlknitr: "/"
 
 title: "Matt Craddock"
