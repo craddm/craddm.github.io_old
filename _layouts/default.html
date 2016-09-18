@@ -1,29 +1,17 @@
 <!DOCTYPE html>
-	<html>
-		<head>
-			<title>{{ page.title }}</title>
-			<!-- link to main stylesheet -->
-			<link rel="stylesheet" type="text/css" href="/css/main.css">
-		</head>
-		<body>
-			<nav>
-	    		<ul>
-	        		<li><a href="/">Home</a></li>
-	        		<li><a href="/cv">CV</a></li>
-	        		<li><a href="/blog">Blog</a></li>
-	    		</ul>
-			</nav>
-			<div class="container">
+<html>
+		
+  {% include head.html %}
+		
+	<body>
+	
+	 {% include sidebar.html %}
+			
+	  <div class="container">
 			
 			{{ content }}
 			
-			</div><!-- /.container -->
-			<footer>
-	    		<ul>
-	    			<li>Email: <a href="mailto:m.p.craddock@leeds.ac.uk">m.p.craddock@leeds.ac.uk</a></li>
-	        		<li>Github: <a href="https://github.com/craddm">github.com/craddm</a></li>
-	        		<li>Twitter: <a href="https://twitter.com/Matt_Craddock/">@Matt_Craddock</a></li>
-			</ul>
-			</footer>
-		</body>
-	</html>
+		</div><!-- /.container -->
+			
+	</body>
+</html>
