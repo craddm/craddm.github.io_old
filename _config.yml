@@ -6,3 +6,4 @@ kramdown:
 permalink: /blog/:year/:month/:day/:title
 url: "http://craddm.github.io"
 highlighter: rouge
+base-url:"/"
