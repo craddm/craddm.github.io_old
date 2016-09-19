@@ -32,7 +32,10 @@ Here's an example of a typical basic ERP plot:
 
 
 ```r
-levCat.plot <- ggplot(levCatGA,aes(Time,value))+scale_color_brewer(palette = "Set1")+theme_minimal()
+levCat.plot <- ggplot(levCatGA,aes(Time,value))+scale_color_brewer(palette = "Set1")+
+  theme_minimal()+
+  geom_vline(xintercept = 0,linetype = "dashed" )+
+  geom_hline(yintercept = 0,linetype = "dashed")
 levCat.plot+
   stat_summary(fun.y = mean,geom = "line",size = 1,aes(colour = variable))+
   labs(x = "Time (ms)",y = expression(paste("Amplitude (",mu,"V)")),colour = "")
@@ -125,13 +128,12 @@ All well and good, but let's not forget that what we're really interested in is 
 
 ```r
 levCat.plot+
-  stat_summary(fun.data = mean_cl_boot,geom = "ribbon",alpha = 0.3,aes(fill = variable))+
   guides(fill = "none")+
-  stat_summary(fun.y = mean,geom = "line",size = 1,aes(colour = variable))+
   labs(x = "Time (ms)", y = expression(paste("Amplitude (",mu,"V)")),colour = "")+
   stat_summary(data = levCatDiff,fun.y=mean,geom = "line",aes(colour = variable))+
   stat_summary(data = levCatDiff,fun.data = mean_cl_boot,geom = "ribbon",alpha = 0.3)+
-  theme_minimal()
+  stat_summary(fun.data = mean_cl_boot,geom = "ribbon",alpha = 0.3,aes(fill = variable))+
+  stat_summary(fun.y = mean,geom = "line",size = 1,aes(colour = variable))
 ```
 
 ![](2016-09-19-ERP-Visualization-Part-1_files/figure-html/diffPlot-1.svg)<!-- -->

@@ -10,7 +10,7 @@ baseurl: "/"
 baseurlknitr: "/"
 paginate: 5
 homepostlimit:  4
-title: "Matt Craddock"
-description: "Cognitive neuroscience and other animals"
+title: "Time-frequency transform""
+description: "Matt Craddock's blog about cognitive neuroscience and other animals"
 comments: true
 disqus: true
