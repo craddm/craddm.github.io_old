@@ -13,3 +13,4 @@ homepostlimit:  4
 title: "Matt Craddock"
 description: "Cognitive neuroscience and other animals"
 comments: true
+disqus: true
