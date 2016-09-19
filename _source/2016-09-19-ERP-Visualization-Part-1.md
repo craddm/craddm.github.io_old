@@ -148,8 +148,7 @@ levCat.plot+
 
 ![](2016-09-19-ERP-Visualization-Part-1_files/figure-html/diffPlot-1.svg)<!-- -->
 
-Note that the confidence interval round the difference wave *is* useful, which isn't really the case for the CIs around the condition means, since now it's showing the variability of the within-subject differences. Note that it's generally narrower than the CIs around the condition means. 
-There are couple of different ways to plot within-participant confidence intervals which you could plot around the conditions means or the difference - I may get back to that some other time. But for the moment, let's just let R do it, and let's keep going with the difference wave. Let's try a version with both the group and individual difference waves, and without the condition means.
+Note that the confidence interval round the difference wave *is* useful, which isn't really the case for the CIs around the condition means, since now it's showing the variability of the within-subject differences. There are couple of different ways to plot within-participant confidence intervals which you could plot around the condition means - I may get back to that some other time. But for the moment, let's keep going with the difference wave and let R handle the CIs. Let's try a version with both the group and individual difference waves, and without the condition means.
 
 
 ```r
