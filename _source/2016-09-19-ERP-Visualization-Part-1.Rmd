@@ -5,6 +5,7 @@ output:
     code_folding: hide
     keep_md: yes
 layout: post
+comments: true
 ---
 
 ```{r setup, include=FALSE}
