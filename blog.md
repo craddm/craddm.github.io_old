@@ -10,5 +10,5 @@ This year's posts
 {{ post.date | date: '%Y' }}
 
 {% endif %} {% endunless %}
-{{ post.date | date:"%d %b" }}: {{ post.title }}
+{{ post.date | date:"%d %b" }}: <a href="{{ post.url }}">{{ post.title }}</a>
 {% endfor %}

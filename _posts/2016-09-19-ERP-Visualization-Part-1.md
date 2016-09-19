@@ -1,16 +1,19 @@
 ---
-title: "ERP Visualization Part 1"
+title: "ERP Visualization Part 1: Comparing two conditions"
 output: 
   html_document:
     code_folding: hide
     keep_md: yes
 layout: post
 comments: true
+categories: [EEG, ERPs, statistics, R, ggplot2]
 ---
 
 
 
-ERP visualization is hard. It's very common for grand average ERP data to be plotted as simple traces representing condition means, with no information regarding variability around these means. There are a couple of variations on this simple theme which show regions of significance, but it's extremely rare to show anything else. A new editorial letter by Rousselet, Foxe, and Bolam in the European Journal of Neuroscience offers some <a href ="http://http://onlinelibrary.wiley.com/doi/10.1111/ejn.13400/epdf">useful guidelines</a>, and Ana Todorovic's recent <a href="http://neuroanatody.com/2016/09/scatterplotting-time-series/">post on adding scatterplots to time-series data </a>is also great. 
+ERP visualization is harder than people think. Often people take the path of least resistance, plotting grand average ERP data as simple traces representing condition means, with no information regarding variability around these means. There are a couple of variations on this simple theme which show regions of significance, but it's extremely rare to show anything else. A new editorial letter by Rousselet, Foxe, and Bolam in the European Journal of Neuroscience offers some <a href ="http://http://onlinelibrary.wiley.com/doi/10.1111/ejn.13400/epdf">useful guidelines</a>, and Ana Todorovic's recent <a href="http://neuroanatody.com/2016/09/scatterplotting-time-series/">post on adding scatterplots to time-series data </a>is also great. 
+I'm going to go through a few examples of plotting ERPs using R, including code throughout.
+
 
 I do all my processing of EEG data in Matlab, using EEGLAB and ERPLAB, but I typically switch over to R when it's time to do the statistics on individual ERP components. In general I love the R package ggplot2 for graphs, so it feels natural to me to try plotting the ERPs using ggplot2. These posts are not intended to codify right or wrong answers on how to visually represent ERPs. Rather, they're my attempt to explore some of the options, get a feel for what's good and bad about each approach, and work out how to actually make these plots in R.
 
@@ -20,7 +23,7 @@ For convenience I've taken some data from a study that we published a last year 
 
 For this first post, I'm going to stick to the main effect of Object. I'll get on to the effect of frequency and the interaction in later posts, which will also be a good opportunity to show some of the difficulties with applying some of the guidelines from the letter to designs that have more than two conditions.
 
-Behind the cut is some code to load in my pre-processed data and whip it into shape. The pre-processed data is four columns containing the amplitude value for each time point for each subject for each condition.
+First up is some code to load in my pre-processed data and whip it into shape. The pre-processed data is four columns containing the amplitude value for each time point for each subject for each condition. We calculate differences between the conditions in a separate data frame (it makes my life a bit easier later on), then set up the basic plot format.
 
 
 ```r
@@ -34,16 +37,17 @@ levCatDiff$Difference <- levCatGA[,1]-levCatGA[,2]
 levCatDiff <- melt(levCatDiff[,3:5], id.vars = c("Subject","Time"))
 levCatGA$Subject <- as.factor(levCatGA$Subject)
 levCatGA <- melt(levCatGA,id.vars = c("Subject","Time"))
+
+levCat.plot <- ggplot(levCatGA,aes(Time,value))+scale_color_brewer(palette = "Set1")+
+  theme_minimal()+
+  geom_vline(xintercept = 0,linetype = "dashed" )+
+  geom_hline(yintercept = 0,linetype = "dashed")
 ```
 
 Here's an example of a typical basic ERP plot:
 
 
 ```r
-levCat.plot <- ggplot(levCatGA,aes(Time,value))+scale_color_brewer(palette = "Set1")+
-  theme_minimal()+
-  geom_vline(xintercept = 0,linetype = "dashed" )+
-  geom_hline(yintercept = 0,linetype = "dashed")
 levCat.plot+
   stat_summary(fun.y = mean,geom = "line",size = 1,aes(colour = variable))+
   labs(x = "Time (ms)",y = expression(paste("Amplitude (",mu,"V)")),colour = "")
@@ -51,7 +55,8 @@ levCat.plot+
 
 ![plot of chunk basicPlot](/figure/source/2016-09-19-ERP-Visualization-Part-1/basicPlot-1.svg)
 
-The individual lines are the condition means of the ERPs at a cluster of right occipital electrodes. 
+The individual lines are the condition means of the ERPs at a cluster of right occipital electrodes.
+
 As you can see, there's no depiction of the variability around the condition means. The simplest way of showing this variability is to add some measure of dispersion around the mean. Let's add shaded areas representing 95% confidence intervals. These confidence intervals are bootstrapped, so if you reproduce this plot, they might differ slightly.
 
 
@@ -85,7 +90,7 @@ levCat.plot+
 
 ![plot of chunk indivAndGroup](/figure/source/2016-09-19-ERP-Visualization-Part-1/indivAndGroup-1.svg)
 
-I've also included here the CI around the condition means. As you can probably see, it's getting a little messy. It's hard to actually pick out individual subjects, and I have no idea which line belongs to which participant. Nevertheless, I can see the initial positive peaks kind of smears over what look like a bunch of short individual peaks that are quite jittered around in time from 80 ms to 120 ms. And although a majority of participants seem to be showing a negative going deflection, peaking around 180 ms, some clearly aren't. Let's try without the group means:
+I've also included here the CI around the condition means. As you can probably see, it's getting a little messy. It's hard to actually pick out individual subjects, and I have no idea which line belongs to which participant. Nevertheless, I can see the initial positive peaks kind of smear over what look like a bunch of short individual peaks that jitter around in time from 80 ms to 120 ms. And although a majority of participants seem to be showing a negative going deflection, peaking around 180 ms, some clearly aren't. Let's try without the group means:
 
 
 ```r
@@ -127,7 +132,7 @@ levCat.plot+
 
 ![plot of chunk condSplitNoMean](/figure/source/2016-09-19-ERP-Visualization-Part-1/condSplitNoMean-1.svg)
 
-It's good, but personally I prefer to have the condition summary on there too.
+It's good, but personally I prefer to have the condition summary on there too. Another possibility would be to have a separate colour for each subject, so you'd know which lines belonged to the same subject across each plot. But it's hard to get enough distinctive colours, so this doesn't work too well.
 
 ## Difference waves
 
