@@ -7,3 +7,22 @@ title: Matt Craddock
 	I work with Dr Donna Lloyd and the <a href = "http://www.leeds.ac.uk/coni/">Cognitive Neuroimaging Group</a> 
 	in the School of Psychology. I use electroencephalography (EEG), functional magnetic resonance imaging(fMRI), 
 	and transcranial alternating current stimulation (tACS).</p>
+	
+	<div class="posts">
+  {% for post in site.posts limit:site.homepostlimit %}
+  <div class="post">
+    <h1 class="post-title">
+      <a href="{{ site.baseurl }}{{ post.url | remove_first: '/'}}">
+        {{ post.title }}
+      </a>
+    </h1>
+    {% if site.disqus %}
+<a href="{{ site.baseurl }}{{ post.url | remove_first: '/'}}#disqus_thread"
+    class = "commentcount"></a>
+    {% endif %}
+    <span class="post-date">{{ post.date | date_to_string }}</span>
+
+    {{ post.content }}
+  </div>
+  {% endfor %}
+</div>
