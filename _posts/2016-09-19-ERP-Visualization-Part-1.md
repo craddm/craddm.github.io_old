@@ -35,21 +35,26 @@ levCatGA <- levCatGA[(levCatGA$Time >= -100)& (levCatGA$Time <= 400),]
 levCatDiff <- levCatGA
 levCatDiff$Difference <- levCatGA[,1]-levCatGA[,2]
 levCatDiff <- melt(levCatDiff[,3:5], id.vars = c("Subject","Time"))
+names(levCatDiff) <- c("Subject","Time","condition","amplitude")
 levCatGA$Subject <- as.factor(levCatGA$Subject)
 levCatGA <- melt(levCatGA,id.vars = c("Subject","Time"))
+names(levCatGA) <- c("Subject","Time","condition","amplitude")
 
-levCat.plot <- ggplot(levCatGA,aes(Time,value))+scale_color_brewer(palette = "Set1")+
+
+levCat.plot <- ggplot(levCatGA,aes(Time,amplitude))+scale_color_brewer(palette = "Set1")+
   theme_minimal()+
   geom_vline(xintercept = 0,linetype = "dashed" )+
   geom_hline(yintercept = 0,linetype = "dashed")
 ```
+
+## The Plots
 
 Here's an example of a typical basic ERP plot:
 
 
 ```r
 levCat.plot+
-  stat_summary(fun.y = mean,geom = "line",size = 1,aes(colour = variable))+
+  stat_summary(fun.y = mean,geom = "line",size = 1,aes(colour = condition))+
   labs(x = "Time (ms)",y = expression(paste("Amplitude (",mu,"V)")),colour = "")
 ```
 
@@ -62,9 +67,9 @@ As you can see, there's no depiction of the variability around the condition mea
 
 ```r
 levCat.plot+
-  stat_summary(fun.data = mean_cl_boot,geom = "ribbon",size = 1,aes(fill = variable),alpha = 0.3)+
+  stat_summary(fun.data = mean_cl_boot,geom = "ribbon",size = 1,aes(fill = condition),alpha = 0.3)+
   guides(fill = "none")+
-  stat_summary(fun.y = mean,geom = "line",size = 1,aes(colour = variable))+
+  stat_summary(fun.y = mean,geom = "line",size = 1,aes(colour = condition))+
   labs(x = "Time (ms)",y = expression(paste("Amplitude (",mu,"V)")),colour = "")
 ```
 
@@ -79,11 +84,11 @@ Another way of showing the variability around the mean is to plot the individual
 
 ```r
 levCat.plot+
-  geom_line(aes(group = interaction(Subject,variable),colour = variable,alpha = 0.2))+
+  geom_line(aes(group = interaction(Subject,condition),colour = condition,alpha = 0.2))+
   guides(alpha= "none")+
-  stat_summary(fun.data = mean_cl_boot,geom = "ribbon",alpha = 0.4,aes(fill = variable))+
+  stat_summary(fun.data = mean_cl_boot,geom = "ribbon",alpha = 0.4,aes(fill = condition))+
   guides(fill= "none")+
-  stat_summary(fun.y = mean,geom = "line",size = 1,aes(colour = variable))+
+  stat_summary(fun.y = mean,geom = "line",size = 1,aes(colour = condition))+
   theme_minimal()+
   labs(x = "Time (ms)",y = expression(paste("Amplitude (",mu,"V)")),colour = "")
 ```
@@ -95,7 +100,7 @@ I've also included here the CI around the condition means. As you can probably s
 
 ```r
 levCat.plot+
-  geom_line(aes(group = interaction(Subject,variable),colour = variable,alpha = 0.2))+
+  geom_line(aes(group = interaction(Subject,condition),colour = condition,alpha = 0.2))+
   guides(alpha= "none")+
   theme_minimal()+
   labs(x = "Time (ms)",y = expression(paste("Amplitude (",mu,"V)")),colour = "")
@@ -108,7 +113,7 @@ Maybe a little better, but I'm struggling to differentiate lines from different 
 
 ```r
 levCat.plot+
-  facet_wrap(~variable)+
+  facet_wrap(~condition)+
   geom_line(aes(group = Subject),alpha = 0.3)+
   stat_summary(fun.data = mean_cl_boot,geom = "ribbon",alpha = 0.4)+
   guides(fill= "none")+
@@ -124,7 +129,7 @@ This is certainly an improvement for understanding the variability around the me
 
 ```r
 levCat.plot+
-  facet_wrap(~variable)+
+  facet_wrap(~condition)+
   geom_line(aes(group = Subject),alpha = 0.3)+
   theme_minimal()+
   labs(x = "Time (ms)",y = expression(paste("Amplitude (",mu,"V)")),colour = "")
@@ -143,24 +148,30 @@ All well and good, but let's not forget that what we're really interested in is 
 levCat.plot+
   guides(fill = "none")+
   labs(x = "Time (ms)", y = expression(paste("Amplitude (",mu,"V)")),colour = "")+
-  stat_summary(data = levCatDiff,fun.y=mean,geom = "line",aes(colour = variable))+
-  stat_summary(data = levCatDiff,fun.data = mean_cl_boot,geom = "ribbon",alpha = 0.3)+
-  stat_summary(fun.data = mean_cl_boot,geom = "ribbon",alpha = 0.3,aes(fill = variable))+
-  stat_summary(fun.y = mean,geom = "line",size = 1,aes(colour = variable))
+  stat_summary(fun.data = mean_cl_boot,geom = "ribbon",alpha = 0.3,aes(fill = condition))+
+  stat_summary(fun.y = mean,geom = "line",size = 1,aes(colour = condition))+
+  
+  stat_summary(data = levCatDiff,fun.y=mean,geom = "line",aes(colour = condition))+
+  stat_summary(data = levCatDiff,fun.data = mean_cl_boot,geom = "ribbon",alpha = 0.3,aes(fill = condition))
 ```
 
 ![plot of chunk diffPlot](/figure/source/2016-09-19-ERP-Visualization-Part-1/diffPlot-1.svg)
 
 Note that the confidence interval round the difference wave *is* useful, which isn't really the case for the CIs around the condition means, since now it's showing the variability of the within-subject differences. Note that it's generally narrower than the CIs around the condition means. 
-There are couple of different ways to plot within-participant confidence intervals which you could plot around the conditions means or the difference, if you liked - I may get back to that some other time. But for the moment, let's just let R do it, and let's keep going with the difference wave. Let's try a version with both the group and individual difference waves, and without the condition means.
+There are couple of different ways to plot within-participant confidence intervals which you could plot around the conditions means or the difference - I may get back to that some other time. But for the moment, let's just let R do it, and let's keep going with the difference wave. Let's try a version with both the group and individual difference waves, and without the condition means.
 
 
 ```r
-levCatDiff.plot <- ggplot(levCatDiff,aes(Time,value))+scale_color_brewer(palette = "Set1")+theme_minimal()
+levCatDiff.plot <- ggplot(levCatDiff,aes(Time,amplitude))+
+  scale_color_brewer(palette = "Set1")+
+  theme_minimal()+
+  geom_vline(xintercept = 0,linetype = "dashed" )+
+  geom_hline(yintercept = 0,linetype = "dashed")
+
 levCatDiff.plot+
   labs(x = "Time (ms)", y = expression(paste("Amplitude (",mu,"V)")),colour = "")+
   stat_summary(fun.y=mean,geom = "line",aes(group = Subject),alpha = 0.3)+
-  stat_summary(fun.y=mean,geom = "line",aes(colour = variable),size = 1)+
+  stat_summary(fun.y=mean,geom = "line",aes(colour = condition),size = 1)+
   stat_summary(fun.data = mean_cl_boot,geom = "ribbon",alpha = 0.3)
 ```
 

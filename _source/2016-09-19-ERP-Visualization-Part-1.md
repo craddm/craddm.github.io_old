@@ -38,6 +38,8 @@ levCat.plot <- ggplot(levCatGA,aes(Time,amplitude))+scale_color_brewer(palette =
   geom_hline(yintercept = 0,linetype = "dashed")
 ```
 
+## The Plots
+
 Here's an example of a typical basic ERP plot:
 
 

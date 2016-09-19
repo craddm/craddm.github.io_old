@@ -49,6 +49,8 @@ levCat.plot <- ggplot(levCatGA,aes(Time,amplitude))+scale_color_brewer(palette =
 
 ```
 
+## The Plots
+
 Here's an example of a typical basic ERP plot:
 
 ```{r basicPlot, fig.height = 5, fig.width = 7}
