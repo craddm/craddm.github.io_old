@@ -33,7 +33,7 @@ names(levCatGA) <- c("Subject","Time","condition","amplitude")
 
 
 levCat.plot <- ggplot(levCatGA,aes(Time,amplitude))+scale_color_brewer(palette = "Set1")+
-  theme_minimal()+
+  theme_classic()+
   geom_vline(xintercept = 0,linetype = "dashed" )+
   geom_hline(yintercept = 0,linetype = "dashed")
 ```
@@ -80,7 +80,6 @@ levCat.plot+
   stat_summary(fun.data = mean_cl_boot,geom = "ribbon",alpha = 0.4,aes(fill = condition))+
   guides(fill= "none")+
   stat_summary(fun.y = mean,geom = "line",size = 1,aes(colour = condition))+
-  theme_minimal()+
   labs(x = "Time (ms)",y = expression(paste("Amplitude (",mu,"V)")),colour = "")
 ```
 
@@ -93,7 +92,6 @@ I've also included here the CI around the condition means. As you can probably s
 levCat.plot+
   geom_line(aes(group = interaction(Subject,condition),colour = condition,alpha = 0.2))+
   guides(alpha= "none")+
-  theme_minimal()+
   labs(x = "Time (ms)",y = expression(paste("Amplitude (",mu,"V)")),colour = "")
 ```
 
@@ -109,7 +107,6 @@ levCat.plot+
   stat_summary(fun.data = mean_cl_boot,geom = "ribbon",alpha = 0.4)+
   guides(fill= "none")+
   stat_summary(fun.y = mean,geom = "line",size = 1)+
-  theme_minimal()+
   labs(x = "Time (ms)",y = expression(paste("Amplitude (",mu,"V)")),colour = "")
 ```
 
@@ -122,7 +119,6 @@ This is certainly an improvement for understanding the variability around the me
 levCat.plot+
   facet_wrap(~condition)+
   geom_line(aes(group = Subject),alpha = 0.3)+
-  theme_minimal()+
   labs(x = "Time (ms)",y = expression(paste("Amplitude (",mu,"V)")),colour = "")
 ```
 
@@ -154,7 +150,7 @@ Note that the confidence interval round the difference wave *is* useful, which i
 ```r
 levCatDiff.plot <- ggplot(levCatDiff,aes(Time,amplitude))+
   scale_color_brewer(palette = "Set1")+
-  theme_minimal()+
+  theme_classic()+
   geom_vline(xintercept = 0,linetype = "dashed" )+
   geom_hline(yintercept = 0,linetype = "dashed")
 
