@@ -16,10 +16,8 @@ title: Matt Craddock
     
     <span class="post-date">{{ post.date | date_to_string }}</span>
 
-    {{ post.excerpt }}
-    <a href="{{ post.url }}">
-      (Click for more)
-    </a>
+    {{ post.content }}
+  
   </div>
   {% endfor %}
 </div>
