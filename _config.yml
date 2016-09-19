@@ -8,6 +8,6 @@ url: "https://craddm.github.io"
 highlighter: rouge
 baseurl: "/"
 baseurlknitr: "/"
-
+paginate: 5
 title: "Matt Craddock"
 description: "Cognitive neuroscience and other animals"
