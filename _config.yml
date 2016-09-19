@@ -1,17 +1,26 @@
 #Jekyll configuration
 name: 'Matt Craddock'
+gems: [jekyll-paginate]
+
 kramdown:
     # Use GitHub flavored markdown, including triple backtick fenced code blocks
     input: GFM
+highlighter: rouge
+
+
 permalink: /blog/:year/:month/:day/:title
 url: "https://craddm.github.io"
-highlighter: rouge
 baseurl: "/"
 baseurlknitr: "/"
-gems: [jekyll-paginate]
+
 paginate: 5
 homepostlimit:  4
+
 title: "Time-frequency transform"
 description: "Matt Craddock's blog about cognitive neuroscience and other animals"
+
 comments: true
 disqus: true
+
+#google tracking
+google_analytics: UA-84391127-1
