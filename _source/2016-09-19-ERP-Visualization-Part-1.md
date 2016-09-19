@@ -38,7 +38,7 @@ levCat.plot+
   labs(x = "Time (ms)",y = expression(paste("Amplitude (",mu,"V)")),colour = "")
 ```
 
-![](2016-09-17-ERP-Visualization-Part-1_files/figure-html/basicPlot-1.png)<!-- -->
+![](2016-09-19-ERP-Visualization-Part-1_files/figure-html/basicPlot-1.svg)<!-- -->
 
 The individual lines are the condition means of the ERPs at a cluster of right occipital electrodes. 
 As you can see, there's no depiction of the variability around the condition means. The simplest way of showing this variability is to add some measure of dispersion around the mean. Let's add shaded areas representing 95% confidence intervals. These confidence intervals are bootstrapped, so if you reproduce this plot, they might differ slightly.
@@ -52,7 +52,7 @@ levCat.plot+
   labs(x = "Time (ms)",y = expression(paste("Amplitude (",mu,"V)")),colour = "")
 ```
 
-![](2016-09-17-ERP-Visualization-Part-1_files/figure-html/CIPlot-1.png)<!-- -->
+![](2016-09-19-ERP-Visualization-Part-1_files/figure-html/CIPlot-1.svg)<!-- -->
 
 What do I learn from adding that? If my data were between-subjects, then the CI would help me make inferences from looking at the distance between the lines and shaded regions, and spot differences in variability across conditions.
 
@@ -72,7 +72,7 @@ levCat.plot+
   labs(x = "Time (ms)",y = expression(paste("Amplitude (",mu,"V)")),colour = "")
 ```
 
-![](2016-09-17-ERP-Visualization-Part-1_files/figure-html/indivAndGroup-1.png)<!-- -->
+![](2016-09-19-ERP-Visualization-Part-1_files/figure-html/indivAndGroup-1.svg)<!-- -->
 
 I've also included here the CI around the condition means. As you can probably see, it's getting a little messy. It's hard to actually pick out individual subjects, and I have no idea which line belongs to which participant. Nevertheless, I can see the initial positive peaks kind of smears over what look like a bunch of short individual peaks that are quite jittered around in time from 80 ms to 120 ms. And although a majority of participants seem to be showing a negative going deflection, peaking around 180 ms, some clearly aren't. Let's try without the group means:
 
@@ -85,7 +85,7 @@ levCat.plot+
   labs(x = "Time (ms)",y = expression(paste("Amplitude (",mu,"V)")),colour = "")
 ```
 
-![](2016-09-17-ERP-Visualization-Part-1_files/figure-html/indivNoGroup-1.png)<!-- -->
+![](2016-09-19-ERP-Visualization-Part-1_files/figure-html/indivNoGroup-1.svg)<!-- -->
 
 Maybe a little better, but I'm struggling to differentiate lines from different conditions. Let's split the plot by condition to try to make things a little more readable.
 
@@ -101,7 +101,7 @@ levCat.plot+
   labs(x = "Time (ms)",y = expression(paste("Amplitude (",mu,"V)")),colour = "")
 ```
 
-![](2016-09-17-ERP-Visualization-Part-1_files/figure-html/condSplit-1.png)<!-- -->
+![](2016-09-19-ERP-Visualization-Part-1_files/figure-html/condSplit-1.svg)<!-- -->
 
 This is certainly an improvement for understanding the variability around the mean for each condition; here's one last go without the group means.
 
@@ -114,7 +114,7 @@ levCat.plot+
   labs(x = "Time (ms)",y = expression(paste("Amplitude (",mu,"V)")),colour = "")
 ```
 
-![](2016-09-17-ERP-Visualization-Part-1_files/figure-html/condSplitNoMean-1.png)<!-- -->
+![](2016-09-19-ERP-Visualization-Part-1_files/figure-html/condSplitNoMean-1.svg)<!-- -->
 
 It's good, but personally I prefer to have the condition summary on there too.
 
@@ -134,7 +134,7 @@ levCat.plot+
   theme_minimal()
 ```
 
-![](2016-09-17-ERP-Visualization-Part-1_files/figure-html/diffPlot-1.png)<!-- -->
+![](2016-09-19-ERP-Visualization-Part-1_files/figure-html/diffPlot-1.svg)<!-- -->
 
 Note that the confidence interval round the difference wave *is* useful, which isn't really the case for the CIs around the condition means, since now it's showing the variability of the within-subject differences. Note that it's generally narrower than the CIs around the condition means. 
 There are couple of different ways to plot within-participant confidence intervals which you could plot around the conditions means or the difference, if you liked - I may get back to that some other time. But for the moment, let's just let R do it, and let's keep going with the difference wave. Let's try a version with both the group and individual difference waves, and without the condition means.
@@ -149,7 +149,7 @@ levCatDiff.plot+
   stat_summary(fun.data = mean_cl_boot,geom = "ribbon",alpha = 0.3)
 ```
 
-![](2016-09-17-ERP-Visualization-Part-1_files/figure-html/indivDiffPlot-1.png)<!-- -->
+![](2016-09-19-ERP-Visualization-Part-1_files/figure-html/indivDiffPlot-1.svg)<!-- -->
 
 In this version of the plot you can see that the difference wave starts to diverge from zero at around 80 ms or so, peaking around 125ms and then reaching a nadir at around 180ms. The confidence intervals give a handy idea of where (uncorrected) tests would find significant differences between the two conditions. The individual waves show that there are a couple of participants who show much bigger negative deflections for objects than the other subjects, and at least one who seems to be going in the other direction at the time of the negative peak of the difference.
 
