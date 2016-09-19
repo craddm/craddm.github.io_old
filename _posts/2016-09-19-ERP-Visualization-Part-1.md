@@ -41,10 +41,9 @@ levCatGA <- melt(levCatGA,id.vars = c("Subject","Time"))
 names(levCatGA) <- c("Subject","Time","condition","amplitude")
 
 
-levCat.plot <- ggplot(levCatGA,aes(Time,amplitude))+scale_color_brewer(palette = "Set1")+
-  theme_minimal()+
-  geom_vline(xintercept = 0,linetype = "dashed" )+
-  geom_hline(yintercept = 0,linetype = "dashed")
+levCat.plot <- ggplot(levCatGA,aes(Time,amplitude))+
+  scale_color_brewer(palette = "Set1")+
+  theme_classic()
 ```
 
 ## The Plots
@@ -55,7 +54,9 @@ Here's an example of a typical basic ERP plot:
 ```r
 levCat.plot+
   stat_summary(fun.y = mean,geom = "line",size = 1,aes(colour = condition))+
-  labs(x = "Time (ms)",y = expression(paste("Amplitude (",mu,"V)")),colour = "")
+  labs(x = "Time (ms)",y = expression(paste("Amplitude (",mu,"V)")),colour = "")+
+  geom_vline(xintercept = 0,linetype = "dashed" )+
+  geom_hline(yintercept = 0,linetype = "dashed")
 ```
 
 ![plot of chunk basicPlot](/figure/source/2016-09-19-ERP-Visualization-Part-1/basicPlot-1.svg)
@@ -70,7 +71,9 @@ levCat.plot+
   stat_summary(fun.data = mean_cl_boot,geom = "ribbon",size = 1,aes(fill = condition),alpha = 0.3)+
   guides(fill = "none")+
   stat_summary(fun.y = mean,geom = "line",size = 1,aes(colour = condition))+
-  labs(x = "Time (ms)",y = expression(paste("Amplitude (",mu,"V)")),colour = "")
+  labs(x = "Time (ms)",y = expression(paste("Amplitude (",mu,"V)")),colour = "")+
+  geom_vline(xintercept = 0,linetype = "dashed" )+
+  geom_hline(yintercept = 0,linetype = "dashed")
 ```
 
 ![plot of chunk CIPlot](/figure/source/2016-09-19-ERP-Visualization-Part-1/CIPlot-1.svg)
@@ -89,8 +92,9 @@ levCat.plot+
   stat_summary(fun.data = mean_cl_boot,geom = "ribbon",alpha = 0.4,aes(fill = condition))+
   guides(fill= "none")+
   stat_summary(fun.y = mean,geom = "line",size = 1,aes(colour = condition))+
-  theme_minimal()+
-  labs(x = "Time (ms)",y = expression(paste("Amplitude (",mu,"V)")),colour = "")
+  labs(x = "Time (ms)",y = expression(paste("Amplitude (",mu,"V)")),colour = "")+
+  geom_vline(xintercept = 0,linetype = "dashed" )+
+  geom_hline(yintercept = 0,linetype = "dashed")
 ```
 
 ![plot of chunk indivAndGroup](/figure/source/2016-09-19-ERP-Visualization-Part-1/indivAndGroup-1.svg)
@@ -102,8 +106,9 @@ I've also included here the CI around the condition means. As you can probably s
 levCat.plot+
   geom_line(aes(group = interaction(Subject,condition),colour = condition,alpha = 0.2))+
   guides(alpha= "none")+
-  theme_minimal()+
-  labs(x = "Time (ms)",y = expression(paste("Amplitude (",mu,"V)")),colour = "")
+  labs(x = "Time (ms)",y = expression(paste("Amplitude (",mu,"V)")),colour = "")+
+    geom_vline(xintercept = 0,linetype = "dashed" )+
+  geom_hline(yintercept = 0,linetype = "dashed")
 ```
 
 ![plot of chunk indivNoGroup](/figure/source/2016-09-19-ERP-Visualization-Part-1/indivNoGroup-1.svg)
@@ -118,8 +123,9 @@ levCat.plot+
   stat_summary(fun.data = mean_cl_boot,geom = "ribbon",alpha = 0.4)+
   guides(fill= "none")+
   stat_summary(fun.y = mean,geom = "line",size = 1)+
-  theme_minimal()+
-  labs(x = "Time (ms)",y = expression(paste("Amplitude (",mu,"V)")),colour = "")
+  labs(x = "Time (ms)",y = expression(paste("Amplitude (",mu,"V)")),colour = "")+
+  geom_vline(xintercept = 0,linetype = "dashed" )+
+  geom_hline(yintercept = 0,linetype = "dashed")
 ```
 
 ![plot of chunk condSplit](/figure/source/2016-09-19-ERP-Visualization-Part-1/condSplit-1.svg)
@@ -131,8 +137,9 @@ This is certainly an improvement for understanding the variability around the me
 levCat.plot+
   facet_wrap(~condition)+
   geom_line(aes(group = Subject),alpha = 0.3)+
-  theme_minimal()+
-  labs(x = "Time (ms)",y = expression(paste("Amplitude (",mu,"V)")),colour = "")
+  labs(x = "Time (ms)",y = expression(paste("Amplitude (",mu,"V)")),colour = "")+
+  geom_vline(xintercept = 0,linetype = "dashed" )+
+  geom_hline(yintercept = 0,linetype = "dashed")
 ```
 
 ![plot of chunk condSplitNoMean](/figure/source/2016-09-19-ERP-Visualization-Part-1/condSplitNoMean-1.svg)
@@ -152,7 +159,9 @@ levCat.plot+
   stat_summary(fun.y = mean,geom = "line",size = 1,aes(colour = condition))+
   
   stat_summary(data = levCatDiff,fun.y=mean,geom = "line",aes(colour = condition))+
-  stat_summary(data = levCatDiff,fun.data = mean_cl_boot,geom = "ribbon",alpha = 0.3,aes(fill = condition))
+  stat_summary(data = levCatDiff,fun.data = mean_cl_boot,geom = "ribbon",alpha = 0.3,aes(fill = condition))+
+   geom_vline(xintercept = 0,linetype = "dashed" )+
+  geom_hline(yintercept = 0,linetype = "dashed")
 ```
 
 ![plot of chunk diffPlot](/figure/source/2016-09-19-ERP-Visualization-Part-1/diffPlot-1.svg)
@@ -163,15 +172,15 @@ Note that the confidence interval round the difference wave *is* useful, which i
 ```r
 levCatDiff.plot <- ggplot(levCatDiff,aes(Time,amplitude))+
   scale_color_brewer(palette = "Set1")+
-  theme_minimal()+
-  geom_vline(xintercept = 0,linetype = "dashed" )+
-  geom_hline(yintercept = 0,linetype = "dashed")
+  theme_classic()
 
 levCatDiff.plot+
   labs(x = "Time (ms)", y = expression(paste("Amplitude (",mu,"V)")),colour = "")+
   stat_summary(fun.y=mean,geom = "line",aes(group = Subject),alpha = 0.3)+
   stat_summary(fun.y=mean,geom = "line",aes(colour = condition),size = 1)+
-  stat_summary(fun.data = mean_cl_boot,geom = "ribbon",alpha = 0.3)
+  stat_summary(fun.data = mean_cl_boot,geom = "ribbon",alpha = 0.3)+
+   geom_vline(xintercept = 0,linetype = "dashed" )+
+  geom_hline(yintercept = 0,linetype = "dashed")
 ```
 
 ![plot of chunk indivDiffPlot](/figure/source/2016-09-19-ERP-Visualization-Part-1/indivDiffPlot-1.svg)

@@ -42,10 +42,10 @@ levCatGA <- melt(levCatGA,id.vars = c("Subject","Time"))
 names(levCatGA) <- c("Subject","Time","condition","amplitude")
 
 
-levCat.plot <- ggplot(levCatGA,aes(Time,amplitude))+scale_color_brewer(palette = "Set1")+
-  theme_classic()+
-  geom_vline(xintercept = 0,linetype = "dashed" )+
-  geom_hline(yintercept = 0,linetype = "dashed")
+levCat.plot <- ggplot(levCatGA,aes(Time,amplitude))+
+  scale_color_brewer(palette = "Set1")+
+  theme_classic()
+ 
 
 ```
 
@@ -56,7 +56,9 @@ Here's an example of a typical basic ERP plot:
 ```{r basicPlot, fig.height = 5, fig.width = 7}
 levCat.plot+
   stat_summary(fun.y = mean,geom = "line",size = 1,aes(colour = condition))+
-  labs(x = "Time (ms)",y = expression(paste("Amplitude (",mu,"V)")),colour = "")
+  labs(x = "Time (ms)",y = expression(paste("Amplitude (",mu,"V)")),colour = "")+
+  geom_vline(xintercept = 0,linetype = "dashed" )+
+  geom_hline(yintercept = 0,linetype = "dashed")
 ```
 
 The individual lines are the condition means of the ERPs at a cluster of right occipital electrodes.
@@ -68,7 +70,9 @@ levCat.plot+
   stat_summary(fun.data = mean_cl_boot,geom = "ribbon",size = 1,aes(fill = condition),alpha = 0.3)+
   guides(fill = "none")+
   stat_summary(fun.y = mean,geom = "line",size = 1,aes(colour = condition))+
-  labs(x = "Time (ms)",y = expression(paste("Amplitude (",mu,"V)")),colour = "")
+  labs(x = "Time (ms)",y = expression(paste("Amplitude (",mu,"V)")),colour = "")+
+  geom_vline(xintercept = 0,linetype = "dashed" )+
+  geom_hline(yintercept = 0,linetype = "dashed")
 ```
 
 What do I learn from adding that? If my data were between-subjects, then the CI would help me make inferences from looking at the distance between the lines and shaded regions, and spot differences in variability across conditions.
@@ -84,7 +88,9 @@ levCat.plot+
   stat_summary(fun.data = mean_cl_boot,geom = "ribbon",alpha = 0.4,aes(fill = condition))+
   guides(fill= "none")+
   stat_summary(fun.y = mean,geom = "line",size = 1,aes(colour = condition))+
-  labs(x = "Time (ms)",y = expression(paste("Amplitude (",mu,"V)")),colour = "")
+  labs(x = "Time (ms)",y = expression(paste("Amplitude (",mu,"V)")),colour = "")+
+  geom_vline(xintercept = 0,linetype = "dashed" )+
+  geom_hline(yintercept = 0,linetype = "dashed")
 ```
 
 I've also included here the CI around the condition means. As you can probably see, it's getting a little messy. It's hard to actually pick out individual subjects, and I have no idea which line belongs to which participant. Nevertheless, I can see the initial positive peaks kind of smear over what look like a bunch of short individual peaks that jitter around in time from 80 ms to 120 ms. And although a majority of participants seem to be showing a negative going deflection, peaking around 180 ms, some clearly aren't. Let's try without the group means:
@@ -93,7 +99,9 @@ I've also included here the CI around the condition means. As you can probably s
 levCat.plot+
   geom_line(aes(group = interaction(Subject,condition),colour = condition,alpha = 0.2))+
   guides(alpha= "none")+
-  labs(x = "Time (ms)",y = expression(paste("Amplitude (",mu,"V)")),colour = "")
+  labs(x = "Time (ms)",y = expression(paste("Amplitude (",mu,"V)")),colour = "")+
+    geom_vline(xintercept = 0,linetype = "dashed" )+
+  geom_hline(yintercept = 0,linetype = "dashed")
 ```
 
 Maybe a little better, but I'm struggling to differentiate lines from different conditions. Let's split the plot by condition to try to make things a little more readable.
@@ -105,7 +113,9 @@ levCat.plot+
   stat_summary(fun.data = mean_cl_boot,geom = "ribbon",alpha = 0.4)+
   guides(fill= "none")+
   stat_summary(fun.y = mean,geom = "line",size = 1)+
-  labs(x = "Time (ms)",y = expression(paste("Amplitude (",mu,"V)")),colour = "")
+  labs(x = "Time (ms)",y = expression(paste("Amplitude (",mu,"V)")),colour = "")+
+  geom_vline(xintercept = 0,linetype = "dashed" )+
+  geom_hline(yintercept = 0,linetype = "dashed")
 ```
 
 This is certainly an improvement for understanding the variability around the mean for each condition; here's one last go without the group means.
@@ -114,7 +124,9 @@ This is certainly an improvement for understanding the variability around the me
 levCat.plot+
   facet_wrap(~condition)+
   geom_line(aes(group = Subject),alpha = 0.3)+
-  labs(x = "Time (ms)",y = expression(paste("Amplitude (",mu,"V)")),colour = "")
+  labs(x = "Time (ms)",y = expression(paste("Amplitude (",mu,"V)")),colour = "")+
+  geom_vline(xintercept = 0,linetype = "dashed" )+
+  geom_hline(yintercept = 0,linetype = "dashed")
 ```
 
 It's good, but personally I prefer to have the condition summary on there too. Another possibility would be to have a separate colour for each subject, so you'd know which lines belonged to the same subject across each plot. But it's hard to get enough distinctive colours, so this doesn't work too well.
@@ -131,7 +143,9 @@ levCat.plot+
   stat_summary(fun.y = mean,geom = "line",size = 1,aes(colour = condition))+
   
   stat_summary(data = levCatDiff,fun.y=mean,geom = "line",aes(colour = condition))+
-  stat_summary(data = levCatDiff,fun.data = mean_cl_boot,geom = "ribbon",alpha = 0.3,aes(fill = condition))
+  stat_summary(data = levCatDiff,fun.data = mean_cl_boot,geom = "ribbon",alpha = 0.3,aes(fill = condition))+
+   geom_vline(xintercept = 0,linetype = "dashed" )+
+  geom_hline(yintercept = 0,linetype = "dashed")
   
 ```
 
@@ -140,15 +154,15 @@ Note that the confidence interval round the difference wave *is* useful, which i
 ```{r indivDiffPlot, fig.height = 5, fig.width = 7}
 levCatDiff.plot <- ggplot(levCatDiff,aes(Time,amplitude))+
   scale_color_brewer(palette = "Set1")+
-  theme_classic()+
-  geom_vline(xintercept = 0,linetype = "dashed" )+
-  geom_hline(yintercept = 0,linetype = "dashed")
+  theme_classic()
 
 levCatDiff.plot+
   labs(x = "Time (ms)", y = expression(paste("Amplitude (",mu,"V)")),colour = "")+
   stat_summary(fun.y=mean,geom = "line",aes(group = Subject),alpha = 0.3)+
   stat_summary(fun.y=mean,geom = "line",aes(colour = condition),size = 1)+
-  stat_summary(fun.data = mean_cl_boot,geom = "ribbon",alpha = 0.3)
+  stat_summary(fun.data = mean_cl_boot,geom = "ribbon",alpha = 0.3)+
+   geom_vline(xintercept = 0,linetype = "dashed" )+
+  geom_hline(yintercept = 0,linetype = "dashed")
 ```
 
 In this version of the plot you can see that the difference wave starts to diverge from zero at around 80 ms or so, peaking around 125ms and then reaching a nadir at around 180ms. The confidence intervals give a handy idea of where (uncorrected) tests would find significant differences between the two conditions. The individual waves show that there are a couple of participants who show much bigger negative deflections for objects than the other subjects, and at least one who seems to be going in the other direction at the time of the negative peak of the difference.
