@@ -6,7 +6,7 @@ ERP visualization is harder than people think. Often people take the path of lea
 I'm going to go through a few examples of plotting ERPs using R, including code throughout.
 
 
-I do all my processing of EEG data in Matlab, using EEGLAB and ERPLAB, but I typically switch over to R when it's time to do the statistics on individual ERP components. In general I love the R package ggplot2 for graphs, so it feels natural to me to try plotting the ERPs using ggplot2. These posts are not intended to codify right or wrong answers on how to visually represent ERPs. Rather, they're my attempt to explore some of the options, get a feel for what's good and bad about each approach, and work out how to actually make these plots in R.
+I do all my processing of EEG data in Matlab, using <a href = "https://sccn.ucsd.edu/eeglab/">EEGLAB</a>, <a href="http://erpinfo.org/erplab">ERPLAB</a>, and <a href="http://www.fieldtriptoolbox.org/">Fieldtrip</a>. I typically switch over to R when it's time to do the statistics on individual ERP components or time-frequency windows. In general I love the R package ggplot2 for graphs, so it feels natural to me to try plotting the ERPs using ggplot2. These posts are not intended to codify right or wrong answers on how to visually represent ERPs. Rather, they're my attempt to explore some of the options, get a feel for what's good and bad about each approach, and work out how to actually make these plots in R.
 
 ## The data
 
@@ -157,7 +157,9 @@ levCat.plot+
 
 ![](2016-09-19-ERP-Visualization-Part-1_files/figure-html/diffPlot-1.svg)<!-- -->
 
-Note that the confidence interval round the difference wave *is* useful, which isn't really the case for the CIs around the condition means, since now it's showing the variability of the within-subject differences. There are couple of different ways to plot within-participant confidence intervals which you could plot around the condition means - I may get back to that some other time. But for the moment, let's keep going with the difference wave and let R handle the CIs. Let's try a version with both the group and individual difference waves, and without the condition means.
+Note that the confidence interval round the difference wave *is* useful, which isn't really the case for the CIs around the condition means, since now it's showing the variability of the within-subject differences. There are couple of different ways to plot within-participant confidence intervals which you could plot around the condition means - I may get back to that some other time. But for the moment, let's keep going with the difference wave and let R handle the CIs.
+
+For one last trick, I'll add dots to a pre-specified time-point on the difference wave plot, as suggested by <a href="http://neuroanatody.com/2016/09/scatterplotting-time-series/">Ana Todorovic</a>. These are a little redundant when you're plotting the individual waves, but do give a slightly easier way to see the distribution at a specific time point. This could easily be expanded to multiple time points.
 
 
 ```r
@@ -165,18 +167,44 @@ levCatDiff.plot <- ggplot(levCatDiff,aes(Time,amplitude))+
   scale_color_brewer(palette = "Set1")+
   theme_classic()
 
+timePoint <- 180 #time in ms to plot indiv points.
+closestTime <- levCatDiff[which.min(abs(levCatDiff$Time-timePoint)),]$Time #find the closest time in the actual data
+
 levCatDiff.plot+
   labs(x = "Time (ms)", y = expression(paste("Amplitude (",mu,"V)")),colour = "")+
-  stat_summary(fun.y=mean,geom = "line",aes(group = Subject),alpha = 0.3)+
+  stat_summary(fun.y=mean,geom = "line",aes(group = Subject),alpha = 0.4)+
   stat_summary(fun.y=mean,geom = "line",aes(colour = condition),size = 1)+
-  stat_summary(fun.data = mean_cl_boot,geom = "ribbon",alpha = 0.3)+
-   geom_vline(xintercept = 0,linetype = "dashed" )+
+  stat_summary(fun.data = mean_cl_boot,geom = "ribbon",alpha = 0.4)+
+  geom_point(data = subset(levCatDiff,Time == closestTime),alpha = 0.6)+
+  geom_vline(xintercept = 0,linetype = "dashed" )+
   geom_hline(yintercept = 0,linetype = "dashed")
 ```
 
 ![](2016-09-19-ERP-Visualization-Part-1_files/figure-html/indivDiffPlot-1.svg)<!-- -->
 
-In this version of the plot you can see that the difference wave starts to diverge from zero at around 80 ms or so, peaking around 125ms and then reaching a nadir at around 180ms. The confidence intervals give a handy idea of where (uncorrected) tests would find significant differences between the two conditions. The individual waves show that there are a couple of participants who show much bigger negative deflections for objects than the other subjects, and at least one who seems to be going in the other direction at the time of the negative peak of the difference.
+
+In this version of the plot you can see that the difference wave starts to diverge from zero at around 80 ms or so, peaking around 125ms and then reaching a nadir at around 180ms. The confidence intervals give a handy idea of where (uncorrected) tests would find significant differences between the two conditions. The individual waves show that there are a couple of participants who show much bigger negative deflections for objects than the other subjects, and at least one or two whose effects seem to be going in the other direction at the time of the trough of the negative difference. In contrast, the earlier effect in the P1 - around 100ms - seems much more consistent across subjects, with all the waves quite tightly clustered around the mean.
+
+Let's add condition means without CIs to the difference wave plot, and drop the dots at 180ms.
+
+
+```r
+levCat.plot+
+  guides(fill = "none")+
+  labs(x = "Time (ms)", y = expression(paste("Amplitude (",mu,"V)")),colour = "")+
+  stat_summary(fun.y = mean,geom = "line",size = 1,aes(colour = condition))+
+  stat_summary(data = levCatDiff,fun.y=mean,geom = "line",aes(colour = condition))+
+   stat_summary(data = levCatDiff,fun.y=mean,geom = "line",aes(group = Subject),alpha = 0.3)+
+  stat_summary(data = levCatDiff,fun.data = mean_cl_boot,geom = "ribbon",alpha = 0.3,aes(fill = condition))+
+  geom_vline(xintercept = 0,linetype = "dashed" )+
+  geom_hline(yintercept = 0,linetype = "dashed")
+```
+
+![](2016-09-19-ERP-Visualization-Part-1_files/figure-html/diffPlotGroup-1.svg)<!-- -->
+
+This is probably as far as you can go on a single figure without it being too busy - you can see the grand mean ERP for each condition, the mean difference between the conditions with appropriate confidence intervals, and the individual difference waves.
+
+So, what's next? So far I've shown a bunch of different plots for comparing two conditions at a single electrode. Next I'll be trying to compare three conditions at a single electrode, then trying to look at interactions at a single electrode.
 
 ### References
 <div id="craddock">
