@@ -19,9 +19,9 @@ I do all my processing of EEG data in Matlab, using <a href = "https://sccn.ucsd
 
 ## The data
 
-For convenience I've taken some data from a study that we published a last year <a href="#craddock">[1]</a>. We used a 2 x 3 factorial repeated measures design, with the factors Object (object vs non-object) and Spatial Frequency (high, broadband, low). Check out the article itself for more details. 
+For convenience I've taken some data from a study that we published last year <a href="#craddock">[1]</a>. We used a 2 x 3 factorial repeated measures design, with the factors Object (object vs non-object) and Spatial Frequency (high, broadband, low). Check out the article itself for more details. 
 
-For this first post, I'm going to stick to the main effect of Object. I'll get on to the effect of frequency and the interaction in later posts, which will also be a good opportunity to show some of the difficulties with applying some of the guidelines from the letter to designs that have more than two conditions.
+For this first post, I'm going to stick to the main effect of Object. I'll get on to the effect of frequency and the interaction in later posts, which will also be a good opportunity to show some of the difficulties with applying some of these guidelines to designs that have more than two conditions.
 
 First up is some code to load in my pre-processed data and whip it into shape. The pre-processed data is four columns containing the amplitude value for each time point for each subject for each condition. We calculate differences between the conditions in a separate data frame (it makes my life a bit easier later on), then set up the basic plot format.
 
@@ -80,7 +80,7 @@ levCat.plot+
 
 What do I learn from adding that? If my data were between-subjects, then the CI would help me make inferences from looking at the distance between the lines and shaded regions, and spot differences in variability across conditions.
 
-However, my data is repeated measures, so these CIs are not massively helpful here. They show the between-subject variability for each condition, but what I'm interested in is the variability of the within-subject difference between the two conditions. I'll come back to this issue later.
+However, my data is repeated measures, so these CIs are not massively helpful here. What I'm really interested in is the variability of the within-subject difference between the two conditions. I'll come back to this issue later.
 
 Another way of showing the variability around the mean is to plot the individual subject data as well as the mean:
 
