@@ -8,6 +8,7 @@ categories: [EEG, ERPs, statistics, R, ggplot2]
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE,dev = 'svg')
+options(contrasts = c("contr.sum","contr.poly"))
 ```
 
 In part 1 I took a look at visualizing ERPs from two conditions at a single electrode. This time I'm going to look at three conditions. As in the previous post, I'll assume a basic familiarity with ERPs.
@@ -17,7 +18,7 @@ First I'll load in the full dataset, which contains ERPs for all conditions for 
 ```{r preProc}
 library(ggplot2)
 library(reshape2)
-levCatGAall <- read.csv("C:/Users/Matt/Dropbox/BlogStuff/RMarkdown/levCatGAall.csv",header=FALSE)
+levCatGAall <- read.csv("C:/Users/pscmpc/Dropbox/BlogStuff/RMarkdown/levCatGAall.csv",header=FALSE)
 names(levCatGAall) <- c("ObjFull","ObjHP","ObjLP","NonFull","NonHP","NonLP","Time","Subject")
 levCatGAall <- levCatGAall[(levCatGAall$Time >= -100)& (levCatGAall$Time <= 400),]
 levCatGAall$Subject <- as.factor(levCatGAall$Subject)
@@ -25,6 +26,7 @@ levCatGAall <- melt(levCatGAall,id.vars = c("Subject","Time"))
 names(levCatGAall) <- c("Subject","Time","condition","amplitude")
 levCatGAall$Object <- gl(2,11520,labels = c("Object","Non-Object"))
 levCatGAall$Frequency <- gl(3,3840,labels = c("BB","HSF","LSF"))
+levCatGAall$TimeFac <- as.factor(levCatGAall$Time)
 
 ERP.plot <- ggplot(levCatGAall,aes(Time,amplitude))+
   scale_color_brewer(palette = "Set1")+
@@ -102,6 +104,23 @@ In our case, we now have BB-HSF, BB-LSF, and HSF-LSF.
 levCatGAall$GA <- ave(levCatGAall$amplitude,levCatGAall$Time)
 levCatGAall$GAdiff <- levCatGAall$amplitude-levCatGAall$GA
 
+Ftests <- by(levCatGAall,levCatGAall$Time,function (x) summary(aov(amplitude~Object*Frequency + Error(Subject/(Object*Frequency)),data = x))) #runs separate repeated measures ANOVA on each timepoint
+
+unlist(summary(test.aov)[[3]])[[7]] #F-ratio
+unlist(summary(test.aov)[[3]])[[9]] #p-value
+
+FtestPurr <- levCatGAall %>%
+  split(.$Time) %>%
+  #map(~t.test(amplitude~Object,paired = TRUE,data = .)) %>%
+  map(~t.test(amplitude~Object,paired = TRUE,data = .)) %>%
+  map_dbl("p.value")
+
+FtestPurrAOV <- levCatGAall %>%
+  split(.$Time) %>%
+  map(~ aov(amplitude~Frequency+Error(Subject/Frequency),data = .)) %>%
+  map(summary) %>%
+  map_int("Pr(>F)")
+
 ERPdiff.plot <- ggplot(levCatGAall,aes(Time,amplitude))+
   theme_classic()
 
@@ -112,7 +131,6 @@ ERPdiff.plot+
   stat_summary(fun.y = mean,geom = "line",size = 1,aes(y = GAdiff,colour = Frequency))+
   geom_vline(xintercept = 0,linetype = "dashed" )+
   geom_hline(yintercept = 0,linetype = "dashed")
-
 
 ERPdiff.plot+
   guides(fill = "none")+
