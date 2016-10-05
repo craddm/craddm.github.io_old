@@ -18,7 +18,8 @@ First I'll load in the full dataset, which contains ERPs for all conditions for 
 ```{r preProc}
 library(ggplot2)
 library(reshape2)
-levCatGAall <- read.csv("C:/Users/pscmpc/Dropbox/BlogStuff/RMarkdown/levCatGAall.csv",header=FALSE)
+library(dplyr)
+levCatGAall <- read.csv("C:/Users/Matt/Dropbox/BlogStuff/RMarkdown/levCatGAall.csv",header=FALSE)
 names(levCatGAall) <- c("ObjFull","ObjHP","ObjLP","NonFull","NonHP","NonLP","Time","Subject")
 levCatGAall <- levCatGAall[(levCatGAall$Time >= -100)& (levCatGAall$Time <= 400),]
 levCatGAall$Subject <- as.factor(levCatGAall$Subject)
@@ -74,7 +75,7 @@ ERP.plot +
   geom_hline(yintercept = 0,linetype = "dashed")
 ```
 
-Now it's becoming a real mess. It's really difficult to tell the conditions apart properly in the individual traces. Poor choice of colours? Sure, but I tried rendering this plot under multiple colour schemes and it simply didn't help. And this problem can only get worse when you add more conditions. Let's split the conditions up.
+Now it's becoming a real mess. It's really difficult to tell the conditions apart properly in the individual traces. Poor choice of colours? Maybe, but I tried rendering this plot under multiple colour schemes and it simply didn't help. And this problem can only get worse when you add more conditions. Let's split the conditions up.
   
 ```{r condSplit, fig.height = 5, fig.width = 8}
 ERP.plot+
@@ -94,32 +95,27 @@ Now we have three subplots, each informative about a particular condition. The m
 
 In the two condition post, life was simple. A difference wave was a difference wave. In the three condition post, well, now we have multiple possible difference waves...
 
-Typically we'd be running an F-test to check for differences among the means. The first plot we can do corresponds to 
-
-What we need for that is the difference between each condition mean and the *grand* mean, the mean across all conditions. 
-
-In our case, we now have BB-HSF, BB-LSF, and HSF-LSF.
+Typically we'd be running an F-test to check for differences among the means. What we need to plot for that is the difference between each condition mean and the *grand* mean, the mean across all conditions. 
 
 ```{r diffPlotGroup, fig.height = 5, fig.width = 7}
 levCatGAall$GA <- ave(levCatGAall$amplitude,levCatGAall$Time)
 levCatGAall$GAdiff <- levCatGAall$amplitude-levCatGAall$GA
 
-Ftests <- by(levCatGAall,levCatGAall$Time,function (x) summary(aov(amplitude~Object*Frequency + Error(Subject/(Object*Frequency)),data = x))) #runs separate repeated measures ANOVA on each timepoint
+library(purrr)
 
-unlist(summary(test.aov)[[3]])[[7]] #F-ratio
-unlist(summary(test.aov)[[3]])[[9]] #p-value
-
-FtestPurr <- levCatGAall %>%
+FtestPurrezAOV <- levCatGAall %>%
   split(.$Time) %>%
-  #map(~t.test(amplitude~Object,paired = TRUE,data = .)) %>%
-  map(~t.test(amplitude~Object,paired = TRUE,data = .)) %>%
-  map_dbl("p.value")
+  map(~ ezANOVA(data = ., wid = Subject,within = .(Object,Frequency),dv = amplitude)) %>%
+  map_dbl(.,c(1,5,2))
 
-FtestPurrAOV <- levCatGAall %>%
+
+FtestPurrAfx <- levCatGAall %>%
   split(.$Time) %>%
-  map(~ aov(amplitude~Frequency+Error(Subject/Frequency),data = .)) %>%
-  map(summary) %>%
-  map_int("Pr(>F)")
+  map(~ aov_ez("Subject","amplitude",.,within = c("Object","Frequency"))) %>%
+  map_dbl(.,c(1,6,2))
+  
+levCatGAall$pval <- p.adjust(FtestPurrezAOV,"fdr")
+levCatGAall$pval[levCatGAall$pval > .05] <- NA
 
 ERPdiff.plot <- ggplot(levCatGAall,aes(Time,amplitude))+
   theme_classic()
@@ -127,16 +123,40 @@ ERPdiff.plot <- ggplot(levCatGAall,aes(Time,amplitude))+
 ERPdiff.plot+
   guides(fill = "none")+
   labs(x = "Time (ms)", y = expression(paste("Amplitude (",mu,"V)")),colour = "")+
-  stat_summary(fun.data = mean_cl_boot,geom = "ribbon",size = 1,aes(y = GAdiff,fill = Frequency),alpha = 0.4)+
+  stat_summary(fun.y = mean,geom = "line",size = 1,aes(y = GAdiff,fill = Frequency),alpha = 0.4)+
   stat_summary(fun.y = mean,geom = "line",size = 1,aes(y = GAdiff,colour = Frequency))+
+  stat_summary(fun.y = mean,geom= "point",aes(y = pval-2))+
   geom_vline(xintercept = 0,linetype = "dashed" )+
   geom_hline(yintercept = 0,linetype = "dashed")
+
 
 ERPdiff.plot+
   guides(fill = "none")+
   labs(x = "Time (ms)", y = expression(paste("Amplitude (",mu,"V)")),colour = "")+
-  #stat_summary(fun.data = mean_cl_boot,geom = "ribbon",size = 1,aes(y = GAdiff,fill = Frequency),alpha = 0.4)+
-  stat_summary(fun.y = mean,geom = "line",size = 1,aes(y = GAdiff,colour = Frequency,group = interaction(Subject,Frequency)))+
+  stat_summary(fun.data = mean_se,geom = "ribbon",size = 1,aes(y = GAdiff,fill = Frequency),alpha = 0.4)+
+  stat_summary(fun.y = mean,geom = "line",size = 1,aes(y = GAdiff,colour = Frequency))+
+  stat_summary(fun.y = mean,geom= "point",aes(y = pval-2))+
+  geom_vline(xintercept = 0,linetype = "dashed" )+
+  geom_hline(yintercept = 0,linetype = "dashed")
+
+
+ERPdiff.plot+
+  guides(fill = "none")+
+  labs(x = "Time (ms)", y = expression(paste("Amplitude (",mu,"V)")),colour = "")+
+  stat_summary(fun.data = mean_se,geom = "ribbon",size = 1,aes(y = GAdiff,fill = Frequency),alpha = 0.4)+
+  stat_summary(fun.y = mean,fun.args = list(trim = 0.05),geom = "line",size = 1,aes(y = GAdiff,colour = Frequency))+
+  stat_summary(fun.y = mean,geom= "line",aes(y = pval-2))+
+  geom_vline(xintercept = 0,linetype = "dashed" )+
+  geom_hline(yintercept = 0,linetype = "dashed")
+
+
+
+
+ERPdiff.plot+
+  guides(fill = "none")+
+  labs(x = "Time (ms)", y = expression(paste("Amplitude (",mu,"V)")),colour = "")+
+  stat_summary(fun.data = mean_cl_boot,geom = "ribbon",size = 1,aes(y = GAdiff,fill = Frequency),alpha = 0.4)+
+  stat_summary(fun.y = mean,geom = "line",size = 1,aes(y = GAdiff,colour = Frequency,group = interaction(Subject,Frequency),alpha = 0.4))+
   geom_vline(xintercept = 0,linetype = "dashed" )+
   geom_hline(yintercept = 0,linetype = "dashed")
 
