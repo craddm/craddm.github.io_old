@@ -19,7 +19,7 @@ First I'll load in the full dataset, which contains ERPs for all conditions for 
 library(ggplot2)
 library(reshape2)
 library(dplyr)
-levCatGAall <- read.csv("C:/Users/Matt/Dropbox/BlogStuff/RMarkdown/levCatGAall.csv",header=FALSE)
+levCatGAall <- read.csv("https://raw.githubusercontent.com/craddm/ExploringERPs/master/levCatGAall.csv",header=FALSE)
 names(levCatGAall) <- c("ObjFull","ObjHP","ObjLP","NonFull","NonHP","NonLP","Time","Subject")
 levCatGAall <- levCatGAall[(levCatGAall$Time >= -100)& (levCatGAall$Time <= 400),]
 levCatGAall$Subject <- as.factor(levCatGAall$Subject)
@@ -47,7 +47,7 @@ ERP.plot +
 
 Looks pretty much like there's not a lot of difference in the P1, but HSF and BB are more negative in the N1 and P2. 
 
-Let's add 95% confidence intervals.
+Let's add bootstrapped 95% confidence intervals. Note that you could add SE instead of confidence intervals by replacing **mean_cl_boot** with **mean_se**.
 
 ```{r CIPlot,fig.height = 5, fig.width = 7}
 ERP.plot+
@@ -59,8 +59,7 @@ ERP.plot+
   geom_hline(yintercept = 0,linetype = "dashed")
 ```
 
-There's a lot of overlap here, so the picture is starting to get muddy. As noted in the previous post, the CIs are not terribly useful for inference here because they show between-subject variability when what's interesting is the within-subject variability, the variability of the differences. Nevertheless, we'll plow on adding individual subject data.
-
+There's a lot of overlap here, so the picture is already starting to get muddy. As noted in the previous post, the CIs are not terribly useful for inference here because they show between-subject variability when what's interesting is the within-subject variability, the variability of the differences. Nevertheless, we'll plow on adding individual subject data.
 
 ```{r indivAndGroup, fig.height = 5, fig.width = 8}
 ERP.plot +
@@ -88,13 +87,11 @@ ERP.plot+
   geom_hline(yintercept = 0,linetype = "dashed")
 ```
 
-Now we have three subplots, each informative about a particular condition. The mental gymnastics to work out where the differences are becoming harder, and I find myself relying on the condition means. 
+Now we have three subplots, each informative about a particular condition. The mental gymnastics to work out where the differences are are becoming harder, and I find myself relying on the condition means. Couple of points of note - you have a couple of people who look a bit odd in the 160-200 ms time window - where most people are going negative, they aren't. After 230 ms or so, the data in general seems much more variable. But since there's no way to tell which line belongs to which participant, it's hard to really see what I gain here when I'm interested in the within-participant differences. Again, difference waves might be more helpful.
 
 ## Difference waves
 
-In the two condition post, life was simple. Two conditions only need a single difference wave. But as the number of conditions increases, the number of pairwise differences increases.
-
-Typically we'd be running an F-test to test whether any of the means differ from each other, and, if they do, we'd then run post-hoc t-tests to check which pairs of means differ. A simple starting point is thus the difference between each condition mean and the *grand* mean, the mean across all conditions. 
+In the two condition post, life was simple. Two conditions only need a single difference wave. But as the number of conditions increases, the number of pairwise differences increases. For three conditions, you'd need three difference waves (BB-HSF, BB-LSF, HSF-LSF). For four conditions, you'd need six difference waves. But of course, you'd start off with an F-test to test whether any of the means differ from each other, and, if they do, we'd then run post-hoc t-tests to check which pairs of means differ. A simple starting point is thus the difference between each condition mean and the *grand* mean, the mean across all conditions. 
 
 ```{r diffPlotGroup, fig.height = 5, fig.width = 7}
 levCatGAall$GA <- ave(levCatGAall$amplitude,levCatGAall$Time)
@@ -106,44 +103,45 @@ ERPdiff.plot <- ggplot(levCatGAall,aes(Time,amplitude))+
 ERPdiff.plot+
   guides(fill = "none")+
   labs(x = "Time (ms)", y = expression(paste("Amplitude (",mu,"V)")),colour = "")+
-  stat_summary(fun.y = mean,geom = "line",size = 1,aes(y = GAdiff,fill = Frequency),alpha = 0.4)+
-  stat_summary(fun.y = mean,geom = "line",size = 1,aes(y = GAdiff,colour = Frequency))+
+  stat_summary(fun.y = mean,geom = "line",size = 1,aes(y = GAdiff,fill = Frequency),alpha = 0.8)+
   geom_vline(xintercept = 0,linetype = "dashed" )+
   geom_hline(yintercept = 0,linetype = "dashed")
 
+```
+
+In theory, we could add lines for each person's difference from the grand mean...
+
+```{r diffPlotIndiv}
+ERPdiff.plot+
+  guides(fill = "none")+
+  labs(x = "Time (ms)", y = expression(paste("Amplitude (",mu,"V)")),colour = "")+
+  stat_summary(fun.y = mean,geom = "line",size = 1,aes(y = GAdiff,group = interaction(Subject,Frequency),colour = Frequency),alpha = 0.4)+
+  stat_summary(fun.y = mean,geom = "line",size = 2,aes(y = GAdiff,colour = Frequency))+
+  geom_vline(xintercept = 0,linetype = "dashed" )+
+  geom_hline(yintercept = 0,linetype = "dashed")
+```
+
+...but if you can make sense of that, you have better eyesight than I have.
+
+
+```{r diffPlotIndiv2}
+ERPdiff.plot+
+  guides(fill = "none")+
+  labs(x = "Time (ms)", y = expression(paste("Amplitude (",mu,"V)")),colour = "")+
+  stat_summary(fun.y = mean,geom = "line",size = 1,aes(y = GAdiff,group = interaction(Subject,Frequency),colour = Frequency),alpha = 0.4)+
+  stat_summary(fun.y = mean,geom = "line",size = 2,aes(y = GAdiff,colour = Frequency))+
+  geom_vline(xintercept = 0,linetype = "dashed" )+
+  geom_hline(yintercept = 0,linetype = "dashed")
 ```
 
 ```{r diffPlot2}
 ERPdiff.plot+
   guides(fill = "none")+
   labs(x = "Time (ms)", y = expression(paste("Amplitude (",mu,"V)")),colour = "")+
-  stat_summary(fun.data = mean_cl_boot,geom = "ribbon",size = 1,aes(y = GAdiff,fill = Frequency),alpha = 0.4)+
+  stat_summary(fun.data = mean_se,geom = "ribbon",size = 1,aes(y = GAdiff,fill = Frequency),alpha = 0.4)+
   stat_summary(fun.y = mean,geom = "line",size = 1,aes(y = GAdiff,colour = Frequency))+
   geom_vline(xintercept = 0,linetype = "dashed" )+
   geom_hline(yintercept = 0,linetype = "dashed")
-```
-
-```
-ERPdiff.plot+
-  guides(fill = "none")+
-  labs(x = "Time (ms)", y = expression(paste("Amplitude (",mu,"V)")),colour = "")+
-  stat_summary(fun.data = mean_se,geom = "ribbon",size = 1,aes(y = GAdiff,fill = Frequency),alpha = 0.4)+
-  stat_summary(fun.y = mean,fun.args = list(trim = 0.05),geom = "line",size = 1,aes(y = GAdiff,colour = Frequency))+
-  stat_summary(fun.y = mean,geom= "line",aes(y = pval-2))+
-  geom_vline(xintercept = 0,linetype = "dashed" )+
-  geom_hline(yintercept = 0,linetype = "dashed")
-
-
-
-
-ERPdiff.plot+
-  guides(fill = "none")+
-  labs(x = "Time (ms)", y = expression(paste("Amplitude (",mu,"V)")),colour = "")+
-  stat_summary(fun.data = mean_cl_boot,geom = "ribbon",size = 1,aes(y = GAdiff,fill = Frequency),alpha = 0.4)+
-  stat_summary(fun.y = mean,geom = "line",size = 1,aes(y = GAdiff,colour = Frequency,group = interaction(Subject,Frequency),alpha = 0.4))+
-  geom_vline(xintercept = 0,linetype = "dashed" )+
-  geom_hline(yintercept = 0,linetype = "dashed")
-
 ```
 
 
@@ -155,21 +153,26 @@ library(purrr)
 
 FtestPurrAfx <- levCatGAall %>%
   split(.$Time) %>%
-  map(~ aov_ez("Subject","amplitude",.,within = c("Object","Frequency"))) 
-%>%
+  map(~ aov_ez("Subject","amplitude",.,within = c("Object","Frequency"))) %>%
   map_dbl(.,c(1,6,2))
   
-levCatGAall$pval <- p.adjust(FtestPurrezAOV,"fdr")
+levCatGAall$pval <- p.adjust(FtestPurrAfx,"none")
 levCatGAall$pval[levCatGAall$pval > .05] <- NA
 
+ERPdiff.plot <- ggplot(levCatGAall,aes(Time,amplitude))+
+  theme_classic()
 
 ERPdiff.plot+
   guides(fill = "none")+
   labs(x = "Time (ms)", y = expression(paste("Amplitude (",mu,"V)")),colour = "")+
-  stat_summary(fun.y = mean,geom = "line",size = 1,aes(y = GAdiff,fill = Frequency),alpha = 0.4)+
+    stat_summary(fun.data = mean_cl_boot,geom = "ribbon",size = 1,aes(y = GAdiff,fill = Frequency),alpha = 0.4)+
+  #stat_summary(fun.y = mean,geom = "line",size = 1,aes(y = GAdiff,fill = Frequency),alpha = 0.4)+
   stat_summary(fun.y = mean,geom = "line",size = 1,aes(y = GAdiff,colour = Frequency))+
   stat_summary(fun.y = mean,geom= "point",aes(y = pval-2))+
   geom_vline(xintercept = 0,linetype = "dashed" )+
   geom_hline(yintercept = 0,linetype = "dashed")
 
 ```
+
+
+As you can probably see from the above, with just three conditions, some of the recommendations for improving standard ERP figures start to fall down, in my opinion. 
