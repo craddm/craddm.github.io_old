@@ -1,5 +1,5 @@
 ---
-title: "ERP visualization with three conditions"
+title: "ERP visualization with an interaction"
 output: html_document
 layout: post
 comments: true
@@ -23,9 +23,7 @@ library(afex)
 library(purrr)
 
 levCatGAall <- read.csv("https://raw.githubusercontent.com/craddm/ExploringERPs/master/levCatGAall.csv",header=FALSE)
-names(levCatGAall) <- c("ObjFull","ObjHP","ObjLP","NonLP","NonHP","NonFull","Time","Subject")
-levCatGAall <- levCatGAall[c(1,2,3,6,5,4,7,8)] 
-
+names(levCatGAall) <- c("ObjFull","ObjHP","ObjLP","NonFull","NonHP","NonLP","Time","Subject")
 levCatGAall <- levCatGAall[(levCatGAall$Time >= -100)& (levCatGAall$Time <= 400),]
 levCatGAall$Subject <- as.factor(levCatGAall$Subject)
 levCatGAall <- melt(levCatGAall,id.vars = c("Subject","Time"))
@@ -44,13 +42,13 @@ Let's start off with a basic, standard ERP plot.
 
 ```{r basicPlot, fig.height = 5, fig.width = 7}
 ERP.plot +
-  stat_summary(fun.y = mean,geom = "line",size = 1,aes(colour = Frequency)) +
+  stat_summary(fun.y = mean,geom = "line",size = 1,aes(colour = Frequency,linetype = Object)) +
   labs(x = "Time (ms)",y = expression(paste("Amplitude (",mu,"V)")),colour = "") +
   geom_vline(xintercept = 0,linetype = "dashed" ) +
   geom_hline(yintercept = 0,linetype = "dashed")
 ```
 
-Looks pretty much like there's an effect of frequecny in the P1 which carries on right into the N1 and P2 - BB images have higher amplitude responses than LSF or HSF images.
+Looks pretty much like there's not a lot of difference in the P1, but HSF and BB are more negative in the N1 and P2. 
 
 Let's add bootstrapped 95% confidence intervals. Note that you could add SE instead of confidence intervals by replacing **mean_cl_boot** with **mean_se**.
 
@@ -64,7 +62,7 @@ ERP.plot+
   geom_hline(yintercept = 0,linetype = "dashed")
 ```
 
-There's a lot of overlap here, so the figure is starting to get a little muddy. It's not too bad yet, but as noted in the previous post, the CIs are not terribly useful for inference here because they show between-subject variability when what's interesting is the within-subject variability, the variability of the differences. Nevertheless, we'll plow on adding individual subject data.
+There's a lot of overlap here, so the picture is already starting to get muddy. As noted in the previous post, the CIs are not terribly useful for inference here because they show between-subject variability when what's interesting is the within-subject variability, the variability of the differences. Nevertheless, we'll plow on adding individual subject data.
 
 ```{r indivAndGroup, fig.height = 5, fig.width = 8}
 ERP.plot +
@@ -78,7 +76,7 @@ ERP.plot +
   geom_hline(yintercept = 0,linetype = "dashed")
 ```
 
-Now it's becoming a messy. It's really difficult to tell the conditions apart properly in the individual traces. Poor choice of colours? Maybe, but I tried rendering this plot under multiple colour schemes and it simply didn't help. And this problem can only get worse when you add more conditions. It's useful in to have all the conditions on one plot to aid comparisons between them, but given how hard it is to tell them apart I find it hard to make out if there are any systematic, important differences. Of course, this might be specific to this particular dataset. In others, such a plot might reveal far greater variability, or suggest separate subgroups of participants. 
+Now it's becoming a real mess. It's really difficult to tell the conditions apart properly in the individual traces. Poor choice of colours? Maybe, but I tried rendering this plot under multiple colour schemes and it simply didn't help. And this problem can only get worse when you add more conditions. It's useful in to have all the conditions on one plot, to aid comparisons between them, but given how hard it is to tell them apart I find it hard to make out if there are any systematic, important differences. Of course, this might be specific to this particular dataset. In others, such a plot might reveal far greater variability, or suggest separate subgroups of participants. 
 
 Let's split the conditions up.
   
@@ -94,11 +92,9 @@ ERP.plot+
   geom_hline(yintercept = 0,linetype = "dashed")
 ```
 
-Now we have three subplots, each informative about a particular condition. The mental gymnastics to work out where the differences are are becoming harder, and I find myself relying on the condition means. Couple of points of note - you have a couple of people who look a bit odd in the 160-200 ms time window - where most people are going negative, they aren't. After 230 ms or so, the data in general seems much more variable. But I can tell that from the confidence intervals anyway. And since there's no way to tell which line belongs to which participant, it's impossible to know if it's the same participants showing the same patterns across conditions (although I'd say it's very likely in the early parts of the ERP at least). 
+Now we have three subplots, each informative about a particular condition. The mental gymnastics to work out where the differences are are becoming harder, and I find myself relying on the condition means. Couple of points of note - you have a couple of people who look a bit odd in the 160-200 ms time window - where most people are going negative, they aren't. After 230 ms or so, the data in general seems much more variable. But I can tell that from the confidence intervals anyway. 
 
-Despite my misgivings, these plots do give a lot more information about the underlying single subject ERPs behind the condition means, and in some circumstances could be quite helpful in spotting serious outliers or possible subgroups who respond in different ways. One should be quite careful about doing so, of course (more on that in another post, later).
-
-Of course, what I'm really interested in here are the within-subject differences across conditions, so what we really *need* is some kind of difference wave.
+And since there's no way to tell which line belongs to which participant, it's impossible to know if it's the same participants showing the same patterns across conditions (although I'd say it's very likely in the early parts of the ERP at least). And of course, what I'm really interested in here are the within-subject differences across conditions.
 
 ## Difference waves
 
@@ -140,47 +136,19 @@ ERPdiff.plot <- ggplot(levCatGAall,aes(Time,amplitude))+
 ERPdiff.plot+
   guides(fill = "none")+
   labs(x = "Time (ms)", y = expression(paste("Amplitude (",mu,"V)")),colour = "")+
-  stat_summary(fun.data = mean_se,geom = "ribbon",size = 1,aes(y = GAdiff,fill = Frequency),alpha = 0.5)+
   stat_summary(fun.y = mean,geom = "line",size = 1,aes(y = GAdiff,colour = Frequency))+
-  geom_line(aes(x = Time, y = crit-3),na.rm = TRUE,size = 2)+
-  geom_vline(xintercept = 0,linetype = "dashed" )+
-  geom_hline(yintercept = 0,linetype = "dashed")
-```
-
-This shows that, in the uncorrected p values at least, there is a significant effect of frequency around 40 ms, and then from round 80 to 360 ms, and from around 370 - 380 ms. Of course, we can't tell from an F-test alone which means are significantly different from each other at any given time point, even if we can hazard a reasonable guess. It's pretty clear that BB images are diverging from the others much more than the others diverge from each other.
-
-I've added the standard error 
-
-```{r postHocOnF}
-
-postHoc <- levCatGAall %>%
-  split(.$Time) %>%
-  map(~pairwise.t.test(.$amplitude,.$Frequency,paired = TRUE,p.adjust.methods="holm"))
-
-pvals <- data.frame(Time = unique(na.omit(levCatGAall$Time)),
-                    BBHSF = map_dbl(postHoc,c(3,1)),
-                    BBLSF = map_dbl(postHoc,c(3,2)),
-                    HSFLSF = map_dbl(postHoc,c(3,4)))
-
-pvals$BBHSF <- 0+(pvals$BBHSF <= .05) 
-pvals$BBLSF <- 0+(pvals$BBLSF <= .05)
-pvals$HSFLSF <- 0+(pvals$HSFLSF <= .05)
-pvals[pvals == 0] <- NA
-
-
-ERPdiff.plot+
-  guides(fill = "none")+
-  labs(x = "Time (ms)", y = expression(paste("Amplitude (",mu,"V)")),colour = "")+
-  stat_summary(fun.data = mean_se,geom = "ribbon",size = 1,aes(y = GAdiff,fill = Frequency),alpha = 0.5)+
-  stat_summary(fun.y = mean,geom = "line",size = 1,aes(y = GAdiff,colour = Frequency))+
-  geom_line(aes(x = Time, y = crit-3),na.rm = TRUE,size = 2)+
-  geom_line(data = pvals, aes(x = Time, y = BBHSF-3.2),na.rm = TRUE,size = 2,color = "red",alpha = 0.6)+
-  geom_line(data = pvals, aes(x = Time, y = BBLSF-3.4),na.rm = TRUE,size = 2,color = "green")+
-  geom_line(data = pvals, aes(x = Time, y = HSFLSF-3.6),na.rm = TRUE,size = 2,color = "blue")+
+  geom_line(aes(x = Time, y = crit-2),na.rm = TRUE,size = 2)+
   geom_vline(xintercept = 0,linetype = "dashed" )+
   geom_hline(yintercept = 0,linetype = "dashed")
 
+
+#    stat_summary(fun.data = mean_cl_boot,geom = "ribbon",size = 1,aes(y = GAdiff,fill = Frequency),alpha = 0.4)+
+  #stat_summary(fun.y = mean,geom = "line",size = 1,aes(y = GAdiff,fill = Frequency),alpha = 0.4)+  #stat_summary(fun.y = mean,geom= "line",aes(x = Time,y = crit-3),na.rm = TRUE,size = 2)+
+
+
 ```
+
+This shows that, in the uncorrected p values at least, there is a significant effect of frequency around 60 ms, from around 140 to 250 ms, and from around 290 - 330 ms. Of course, we can't tell from an F-test alone which means are significantly different from each other at any given time point, even if we can hazard a reasonable guess. It's pretty clear that LSF are different from the HSF and BB images in the 140 to 250 ms window, for example.
 
 In theory, we could add lines for each person's difference from the grand mean...
 
@@ -217,6 +185,9 @@ ERPdiff.plot+
   geom_vline(xintercept = 0,linetype = "dashed" )+
   geom_hline(yintercept = 0,linetype = "dashed")
 ```
+
+
+
 
 
 As you can probably see from the above, with just three conditions, some of the recommendations for improving standard ERP figures start to fall down, in my opinion. 
