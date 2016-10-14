@@ -15,7 +15,7 @@ In part 1 I took a look at visualizing ERPs from two conditions at a single elec
 
 First I'll load in the full dataset, which contains ERPs for all conditions for all subjects and whip it into shape.
 
-```{r preProc}
+```{r preProc, message = FALSE}
 library(ggplot2)
 library(reshape2)
 library(dplyr)
@@ -24,9 +24,9 @@ library(purrr)
 
 levCatGAall <- read.csv("https://raw.githubusercontent.com/craddm/ExploringERPs/master/levCatGAall.csv",header=FALSE)
 names(levCatGAall) <- c("ObjFull","ObjHP","ObjLP","NonLP","NonHP","NonFull","Time","Subject")
-levCatGAall <- levCatGAall[c(1,2,3,6,5,4,7,8)] 
+levCatGAall <- levCatGAall[c(1,2,3,6,5,4,7,8)] #this is just to switch the order of the columns so it's easier to label them correctly below.
 
-levCatGAall <- levCatGAall[(levCatGAall$Time >= -100)& (levCatGAall$Time <= 400),]
+levCatGAall <- levCatGAall[(levCatGAall$Time >= -100) & (levCatGAall$Time <= 400),]
 levCatGAall$Subject <- as.factor(levCatGAall$Subject)
 levCatGAall <- melt(levCatGAall,id.vars = c("Subject","Time"))
 names(levCatGAall) <- c("Subject","Time","condition","amplitude")
@@ -50,7 +50,7 @@ ERP.plot +
   geom_hline(yintercept = 0,linetype = "dashed")
 ```
 
-Looks pretty much like there's an effect of frequecny in the P1 which carries on right into the N1 and P2 - BB images have higher amplitude responses than LSF or HSF images.
+Looks pretty much like there's an effect of frequency in the P1 which carries on right into the N1 and P2 - BB images have higher amplitude responses than LSF or HSF images.
 
 Let's add bootstrapped 95% confidence intervals. Note that you could add SE instead of confidence intervals by replacing **mean_cl_boot** with **mean_se**.
 
@@ -70,7 +70,7 @@ There's a lot of overlap here, so the figure is starting to get a little muddy. 
 ERP.plot +
   stat_summary(fun.y = mean,geom = "line",alpha = 0.4,aes(group =interaction(Subject,Frequency),colour = Frequency),size = 0.7) +
   guides(alpha= "none") +
-  stat_summary(fun.data = mean_cl_boot,geom = "ribbon",alpha = 0.4,aes(fill = Frequency)) +
+  stat_summary(fun.data = mean_cl_normal,geom = "ribbon",alpha = 0.4,aes(colour = Frequency,fill =Frequency)) +
   stat_summary(fun.y = mean,geom = "line",size = 1,aes(colour = Frequency),alpha = 0.8) +
   labs(x = "Time (ms)",y = expression(paste("Amplitude (",mu,"V)")),colour = "") +
   guides(colour= "none") +
