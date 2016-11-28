@@ -174,7 +174,7 @@ ERPdiff.plot+
   facet_wrap(~Frequency)
 ```
 
-One can see that not everybody shows effects in the same direction as the all times. Again though, not necessarily useful 
+One can see that not everybody shows effects in the same direction as the all times. Again though, not necessarily useful information
 
 ```{r diffPlot2}
 ERPdiff.plot+

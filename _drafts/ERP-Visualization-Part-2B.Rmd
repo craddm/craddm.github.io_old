@@ -224,7 +224,4 @@ ERPdiff.plot+
 ```
 
 
-
-
-
 As you can probably see from the above, with just three conditions, some of the recommendations for improving standard ERP figures start to fall down, in my opinion. 
