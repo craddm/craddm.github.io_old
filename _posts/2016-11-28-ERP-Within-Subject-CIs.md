@@ -104,7 +104,7 @@ levCat.plot+
 
 ![plot of chunk betweenSubj](/figure/source/2016-11-28-ERP-Within-Subject-CIs/betweenSubj-1.svg)
 
-The confidence intervals in the between-subjects plot don't really help you see that the signficant timepoints are actually significant. Let's re-plot the figure using within-subject CIs. I use here some new commands. Using **map_df** from ***purrr***, I convert runningSE, a list of data frames, into a single data frame summarizing the data at each time-point after removing between-subject variability. I then pass this data frame to geom_ribbon to plot the corrected CIs. I could also use it to plot the ERPS, but I'll just let ggplot figure them out from the original data.
+The confidence intervals in the between-subjects plot don't really help you see that the signficant timepoints are actually significant. Let's re-plot the figure using within-subject CIs. I use here some new commands. Using **map_df** from ***purrr***, I convert runningSE, a list of data frames, into a single data frame summarizing the data at each time-point after removing between-subject variability. This also uses **extract** function from ***magrittr***. I then pass this data frame to geom_ribbon to plot the corrected CIs. I could also use it to plot the ERPS, but I'll just let ggplot figure them out from the original data.
 
 
 
