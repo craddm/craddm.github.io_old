@@ -122,7 +122,7 @@ levCat.plot+
 
 ![plot of chunk withinCI](/figure/source/2016-11-28-ERP-Within-Subject-CIs/withinCI-1.svg)
 
-These confidence intervals are much narrower, making it easier to see where significant differences lie from the degree of overlap between the intervals. 
+These confidence intervals are much narrower, reflecting the correlation between measures within participants. These intervals make it easier to see where significant differences lie from the degree of overlap between. 
 
 Finally, let's overlap the two types of confidence interval. 
 
