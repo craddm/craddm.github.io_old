@@ -1,0 +1,30 @@
+---
+title: 'ERP visualization: Basic Shiny Demo'
+output: html_document
+layout: post
+comments: true
+categories: [EEG, ERPs, statistics, R, ggplot2, shiny]
+---
+
+
+
+## Shiny app
+
+In an unusual fit of enthusiasm, I decided to have to go at writing a little app in [Shiny](http://www.shinyapps.io/), a simple programming framework to make web-based apps using R. So, as usual, all programmed using [RStudio](https://www.rstudio.com/), the devs who also make Shiny and various fantastic R packages such as *dplyr* and *ggplot2*.
+
+It turned out to be pretty simple. I'm planning to add various additional functions as I get time to work on my blog posts, like allowing people to use their own data, for example. I've uploaded the current app to Shinyapps.io, so you can have a play with it by [clicking here](https://craddm.shinyapps.io/ERPdemo/).
+
+All the code is available over on my [Github page](https://github.com/craddm/ERPdemo), as is the R Markdown code for the [whole blog](https://github.com/craddm/craddm.github.io). If you want to try using the app with your own data, you should be able to do it by downloading the code yourself and running it in R. You'd need to modify the early lines where it loads the data - 
+
+
+```r
+levCatGA <- read_csv("data/levCatObjNon.csv",
+                     col_names = c("Object", "Non-Object", "Time", "Subject")) %>%
+  mutate(Difference = Object - `Non-Object`) %>%
+  gather(condition, amplitude,-Time,-Subject) %>%
+  mutate(effectType = factor(if_else(condition == "Difference", "Difference", "Main")))
+```
+
+Just change the filename, the instances of the word "Object" and "Non-Object" to whatever labels you want, and you'll be good to go. The initial file format here is that the first two columns are amplitude values for each of two conditions, a numeric column indicating which timepoint each row is from, and a numeric column indicating which Subject the row is from. The order of columns in the file doesn't really matter, though - just make sure you give them the right names when you import them. 
+
+I'm sure the code can be made much more efficient, but this was pretty easy to put together with a little practice!
