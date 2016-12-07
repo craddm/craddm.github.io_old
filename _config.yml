@@ -22,5 +22,8 @@ description: "Matt Craddock's blog about cognitive neuroscience and other animal
 comments: true
 disqus: true
 
+github:
+  repo:           https://github.com/craddm/craddm.github.io
+
 #google tracking
 google_analytics: UA-84391127-1
