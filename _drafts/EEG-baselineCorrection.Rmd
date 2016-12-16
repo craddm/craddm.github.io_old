@@ -1,0 +1,262 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(tidyverse)
+library(ggplot2)
+library(copula)
+```
+
+
+```{r}
+meanSummary <- dataMultiSub %>% gather(condition,power,-Subject) %>% group_by(Subject,condition) %>% summarise(power = mean(power)) 
+
+meanBaselineP <- dataMultiSub %>% gather(condition,power,-Subject) %>% group_by(Subject) %>% summarise(mean = mean(power))
+
+meanBLP2 <- rep(meanBaselineP$mean,each =2)
+
+meanBaseline <- dataMultiSub %>% gather(condition,power,-Subject) %>% group_by(Subject) %>% mutate(power = power-mean(power)) %>% group_by(Subject,condition) %>% summarise(power = mean(power)) %>% ungroup() %>% mutate(blPower = meanSummary$power-meanBLP2)
+
+meanBaselineP2 <- dataMultiSub %>% gather(condition,power,-Subject) %>% group_by(Subject) %>% group_by(Subject,condition) %>% summarise(power = mean(power)) %>%ungroup()
+
+medianBaseline <- dataMultiSub %>% gather(condition,power,-Subject) %>% group_by(Subject) %>% mutate(power = power-median(power)) %>% group_by(Subject,condition) %>% summarise(power = mean(power)) %>%ungroup()
+
+meanSummary %>% ggplot(aes(x = power,fill = condition))+geom_density(alpha =.2)
+meanBaseline %>% ggplot(aes(x = power,fill = condition))+geom_density(alpha =.2)
+medianBaseline %>% ggplot(aes(x = power,fill = condition))+geom_density(alpha =.2)
+
+meanSummary %>% spread(condition,power) %>% mutate(difference = condA-condB) %>% ggplot(aes(x =difference))+geom_density(alpha =.2)
+
+meanBaseline %>% spread(condition,power) %>% mutate(difference = condA-condB) %>% ggplot(aes(x = difference))+geom_density(alpha =.2)
+
+medianBaseline %>% spread(condition,power) %>% mutate(difference = condA-condB) %>% ggplot(aes(x = difference))+geom_density(alpha =.2)
+
+pairwise.t.test(meanSummary$power,meanSummary$condition,paired = TRUE)
+pairwise.t.test(meanBaseline$power,meanBaseline$condition,paired = TRUE)
+pairwise.t.test(medianBaseline$power,medianBaseline$condition,paired = TRUE)
+```
+
+
+```{r generateMVnorm}
+nSubs <- 20
+nTrials <- 100
+
+myCop<- normalCopula(param=0.5, dim = 2, dispstr = "ex")
+myMvd <- mvdc(copula=myCop, margins=c("lnorm", "lnorm"),
+              paramMargins=list(list(meanlog=0.05, sdlog=1),
+                                list(meanlog=0.02, sdlog=1)
+                                ))
+
+MVNdata <- replicate(nSubs,rMvdc(nTrials,myMvd),simplify = FALSE)
+MVNdata <- bind_rows(lapply(MVNdata, data.frame, stringsAsFactors = FALSE)) %>%
+  mutate(Subject = rep(1:nSubs,each = nTrials)) 
+  names(MVNdata) <- c("condA","condB","Subject")
+
+pairs.panels(MVNdata[1:2],method = "spearman")
+
+```
+```{r}
+MVNdata %>% gather(condition,power,-Subject) %>%
+ggplot(aes(x = power,fill = condition))+geom_histogram(position = "dodge")+facet_wrap(~Subject)
+```
+
+```{r}
+meanSummary <- MVNdata %>% gather(condition,power,-Subject) %>% group_by(Subject,condition) %>% summarise(power = mean(power)) 
+
+actualDifference <- MVNdata %>% mutate(difference = log(condA)-log(condB),diffUnt = condA - condB) %>% group_by(Subject) %>% summarise(logDiff = mean(difference),realDiff = mean(diffUnt)) 
+mean(actualDifference$logDiff)
+mean(actualDifference$realDiff)
+```
+```{r}
+meanBLP <- MVNdata  %>% 
+  gather(condition,power,-Subject) %>%
+  group_by(Subject) %>%
+  summarise(mean = mean(power)) 
+
+meanBLP2 <- rep(meanBLP$mean,each =2)
+
+meanBaseline <- MVNdata %>% 
+  gather(condition,power,-Subject) %>% 
+  group_by(Subject) %>% 
+  mutate(power = power-mean(power)) %>%
+  group_by(Subject,condition) %>%
+  summarise(power = mean(power)) %>%
+  ungroup() %>%
+  mutate(meanBL = meanSummary$power-meanBLP2)
+
+meanSummary %>% ggplot(aes(x = power,fill = condition))+geom_density(alpha =.2)
+meanBaseline %>% ggplot(aes(x = power,fill = condition))+geom_density(alpha =.2)
+meanBaseline %>% ggplot(aes(x = meanBL,fill = condition))+geom_density(alpha =.2)
+meanBaseline[1:3] %>% spread(condition,power) %>% mutate(difference = condA-condB) %>% ggplot(aes(x = difference))+geom_density(alpha =.2)
+
+pairwise.t.test(meanSummary$power,meanSummary$condition,paired = TRUE)
+pairwise.t.test(meanBaseline$power,meanBaseline$condition,paired = TRUE)
+
+bb <- meanBaseline[1:3] %>% spread(condition,power)
+t.test(bb$condA,bb$condB,paired = TRUE)
+```
+
+```{r}
+ZScoreBaseline <- MVNdata %>% 
+  gather(condition,power,-Subject) %>% 
+  group_by(Subject) %>% 
+  mutate(power = (power-mean(power))/sd(power)) %>%
+  group_by(Subject,condition) %>%
+  summarise(power = mean(power)) %>%
+  ungroup()
+
+medianBaseline <- MVNdata %>% gather(condition,power,-Subject) %>% group_by(Subject) %>% mutate(power = power-median(power)) %>% group_by(Subject,condition) %>% summarise(power = mean(power)) %>%ungroup()
+
+meanSummary %>% ggplot(aes(x = power,fill = condition))+geom_density(alpha =.2)
+meanBaseline %>% ggplot(aes(x = power,fill = condition))+geom_density(alpha =.2)
+ZScoreBaseline %>% ggplot(aes(x = power,fill = condition))+geom_density(alpha =.2)
+medianBaseline %>% ggplot(aes(x = power,fill = condition))+geom_density(alpha =.2)
+
+meanSummary %>% spread(condition,power) %>% mutate(difference = condA-condB) %>% ggplot(aes(x =difference))+geom_density(alpha =.2)
+
+meanBaseline %>% spread(condition,power) %>% mutate(difference = condA-condB) %>% ggplot(aes(x = difference))+geom_density(alpha =.2)
+ZScoreBaseline %>% spread(condition,power) %>% mutate(difference = condA-condB) %>% ggplot(aes(x = difference))+geom_density(alpha =.2)
+medianBaseline %>% spread(condition,power) %>% mutate(difference = condA-condB) %>% ggplot(aes(x = difference))+geom_density(alpha =.2)
+
+pairwise.t.test(meanSummary$power,meanSummary$condition,paired = TRUE)
+
+pairwise.t.test(ZScoreBaseline$power,meanBaseline$condition,paired = TRUE)
+pairwise.t.test(medianBaseline$power,medianBaseline$condition,paired = TRUE)
+```
+
+```{r}
+meanDivBaseline <- MVNdata %>%
+  gather(condition,power,-Subject) %>%
+  group_by(Subject) %>%
+  mutate(power = power/mean(power)) %>%
+  group_by(Subject,condition) %>%
+  summarise(power = mean(power)) %>%
+  ungroup() 
+
+meanSummary %>% ggplot(aes(x = power,fill = condition))+geom_density(alpha =.2)
+meanDivBaseline %>% ggplot(aes(x = power,fill = condition))+geom_density(alpha =.2)
+
+meanDivBaseline[1:3] %>% spread(condition, power) %>% mutate(difference = condA -
+  condB) %>% ggplot(aes(x = difference)) + geom_density()
+
+pairwise.t.test(meanDivBaseline$power,meanDivBaseline$condition,paired = TRUE)
+
+```
+
+```{r}
+meanDbBaseline <- MVNdata %>%
+  gather(condition, power, -Subject) %>%
+  group_by(Subject) %>%
+  mutate(power = log(power) - log(mean(power))) %>%
+  group_by(Subject, condition) %>%
+  summarise(power = mean(power)) %>%
+  ungroup() %>%
+  mutate(DbBL = log(meanSummary$power/meanBLP2))
+  
+meanDbBaseline %>%
+    ggplot(aes(x = power, fill = condition)) + geom_density(alpha =  .2)
+meanDbBaseline %>%
+    ggplot(aes(x = DbBL, fill = condition)) + geom_density(alpha =  .2)
+
+meanDbBaseline[1:3] %>% spread(condition, power) %>% mutate(difference = condA -
+  condB) %>% ggplot(aes(x = difference)) + geom_density()
+
+meanDbBaseline[c(1:2,4)] %>% spread(condition, DbBL) %>% mutate(difference = condA -
+  condB) %>% ggplot(aes(x = difference)) + geom_density()
+pairwise.t.test(meanDbBaseline$power,meanDbBaseline$condition,paired = TRUE)
+pairwise.t.test(meanDbBaseline$DbBL,meanDbBaseline$condition,paired = TRUE)
+```
+
+```{r}
+  medianDivBaseline <- MVNdata %>%
+    gather(condition, power, -Subject) %>%
+    group_by(Subject) %>%
+    mutate(power = power /median(power)) %>%
+    group_by(Subject, condition) %>% summarise(power = mean(power)) %>%
+    ungroup()
+  
+  meanSummary %>%
+    ggplot(aes(x = power, fill = condition)) + geom_density(alpha = .2)
+  meanDivBaseline %>% ggplot(aes(x = power, fill = condition)) + geom_density(alpha = .2)
+  meanDbBaseline %>%
+    ggplot(aes(x = power, fill = condition)) + geom_density(alpha =  .2)
+  medianDivBaseline %>%
+    ggplot(aes(x = power, fill = condition)) + geom_density(alpha = .2)
+  
+  meanSummary %>% spread(condition, power) %>% mutate(difference = condA -
+  condB) %>% ggplot(aes(x = difference)) + geom_density(alpha = .2)
+  
+  meanDbBaseline %>% spread(condition, power) %>% mutate(difference = condA -
+  condB) %>% ggplot(aes(x = difference)) + geom_density(alpha = .2)
+  
+  
+  medianDivBaseline %>% spread(condition, power) %>% mutate(difference = condA -
+  condB) %>% ggplot(aes(x = difference)) + geom_density(alpha = .2)
+  
+  
+  pairwise.t.test(meanSummary$power, meanSummary$condition, paired = TRUE)
+  pairwise.t.test(meanDivBaseline$power, meanDivBaseline$condition, paired = TRUE)
+  pairwise.t.test(meanDbBaseline$power, meanDbBaseline$condition, paired = TRUE)
+  pairwise.t.test(medianDivBaseline$power,
+  medianDivBaseline$condition,
+  paired = TRUE)
+```
+
+
+```{r}
+meanLogSummary <- MVNdata %>% gather(condition,power,-Subject) %>% group_by(Subject,condition) %>% summarise(power = mean(log10(power))) 
+
+meanBLPlog <- MVNdata  %>% 
+  gather(condition,power,-Subject) %>%
+  group_by(Subject) %>%
+  summarise(mean = mean(log10(power)))
+
+meanBLP2log <- rep(meanBLPlog$mean,each =2)
+
+meanBaselineLog <- MVNdata %>% 
+  gather(condition,power,-Subject) %>% 
+  group_by(Subject) %>% 
+  mutate(power = log10(power)-mean(log10(power))) %>%
+  group_by(Subject,condition) %>%
+  summarise(power = mean(power)) %>%
+  ungroup() %>%
+  mutate(meanBL = meanLogSummary$power-meanBLP2log)
+
+
+meanBaselineLogDiv <- MVNdata %>% 
+  gather(condition,power,-Subject) %>% 
+  group_by(Subject) %>% 
+  mutate(power = log(power)/mean(log(power))) %>%
+  group_by(Subject,condition) %>%
+  summarise(power = mean(power)) %>%
+  ungroup() %>%
+  mutate(meanBL = meanLogSummary$power/meanBLP2log)
+
+meanLogSummary %>% ggplot(aes(x = power,fill = condition))+geom_density(alpha =.2)
+meanBaselineLog %>% ggplot(aes(x = power,fill = condition))+geom_density(alpha =.2)
+meanBaselineLog %>% ggplot(aes(x = meanBL,fill = condition))+geom_density(alpha =.2)
+meanBaselineLogDiv %>% ggplot(aes(x = meanBL,fill = condition))+geom_density(alpha =.2)
+meanBaselineLog[1:3] %>% spread(condition,power) %>% mutate(difference = condA-condB) %>% ggplot(aes(x = difference))+geom_density(alpha =.2)
+meanBaselineLog[c(1,2,4)] %>% spread(condition,meanBL) %>% mutate(difference = condA-condB) %>% ggplot(aes(x = difference))+geom_density(alpha =.2)
+
+meanBaselineLogDiv[c(1,2,4)] %>% spread(condition,meanBL) %>% mutate(difference = condA-condB) %>% ggplot(aes(x = difference))+geom_density(alpha =.2)
+
+
+pairwise.t.test(meanLogSummary$power,meanLogSummary$condition,paired = TRUE)
+pairwise.t.test(meanBaselineLog$power,meanBaselineLog$condition,paired = TRUE)
+pairwise.t.test(meanBaselineLog$meanBL,meanBaselineLog$condition,paired = TRUE)
+pairwise.t.test(meanBaselineLogDiv$power,meanBaselineLog$condition,paired = TRUE)
+
+
+bb <- meanBaselineLog[1:3] %>% spread(condition,power)
+t.test(bb$condA,bb$condB,paired = TRUE)
+
+bb <- meanBaselineLog[c(1,2,4)] %>% spread(condition,meanBL)
+t.test(bb$condA,bb$condB,paired = TRUE)
+
+
+```
+
+
