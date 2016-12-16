@@ -27,3 +27,6 @@ github:
 
 #google tracking
 google_analytics: UA-84391127-1
+
+gems:
+  - jekyll-feed
