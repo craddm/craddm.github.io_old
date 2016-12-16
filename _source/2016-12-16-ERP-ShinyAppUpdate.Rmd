@@ -31,6 +31,9 @@ You can now also add a line showing whether each time-point is significant eithe
 * Bonferroni-Holm corrected
 * False Discovery Rate corrected
 
+
+Head over to [ShinyApps](https://craddm.shinyapps.io/ERPdemo) try it out.
+
 As usual the code is available over on my [Github page](https://github.com/craddm/ERPdemo). If you want to run the app locally rather than over on the Shinyapps website, download it from there. Obviously, you'll need R. The packages listed in the code below are also required to be able to run the app. In R set your working directory to the folder containing *app.R*, and simply type runApp() after loading the Shiny library.
 
 ```{r, eval = FALSE}

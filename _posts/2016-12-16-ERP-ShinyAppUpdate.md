@@ -6,9 +6,7 @@ comments: true
 categories: [EEG, ERPs, statistics, R, ggplot2, shiny]
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE,dev = 'svg')
-```
+
 
 ## Shiny app updated!
 
@@ -20,10 +18,7 @@ You can now try loading up your own data. You'll need a .csv file with the follo
 * Comma-separated values
 * Each row should be one time-point, one subject, columns should be "condition1", "condition2","Time","Subject"
 
-```{r loadandDispFile,include = FALSE}
-levCatGA <- read.csv("https://raw.githubusercontent.com/craddm/ExploringERPs/master/levCatObjNon.csv",header = FALSE)
-head(levCatGA)
-```
+
 
 You can now also add a line showing whether each time-point is significant either:
 
@@ -31,9 +26,13 @@ You can now also add a line showing whether each time-point is significant eithe
 * Bonferroni-Holm corrected
 * False Discovery Rate corrected
 
+
+Head over to [ShinyApps](https://craddm.shinyapps.io/ERPdemo) try it out.
+
 As usual the code is available over on my [Github page](https://github.com/craddm/ERPdemo). If you want to run the app locally rather than over on the Shinyapps website, download it from there. Obviously, you'll need R. The packages listed in the code below are also required to be able to run the app. In R set your working directory to the folder containing *app.R*, and simply type runApp() after loading the Shiny library.
 
-```{r, eval = FALSE}
+
+```r
 install.packages("shiny","tidyverse","magrittr","Rmisc","Cairo","shinythemes")
 ```
 
