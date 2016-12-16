@@ -18,12 +18,16 @@ You can now try loading up your own data. You'll need a .csv file with the follo
 
 * No header
 * Comma-separated values
-* Each row should be one time-point, one subject, columns should be "condition1", "condition2","Time","Subject"
+* Each row should be one time-point, one subject, columns should be "condition1",  "condition2", "Time", "Subject"
 
-```{r loadandDispFile,include = FALSE}
+Here's an example of the first few lines of the example data I include (note this is already after important, so it's stripped the commas between values).
+
+```{r loadandDispFile,echo = FALSE}
 levCatGA <- read.csv("https://raw.githubusercontent.com/craddm/ExploringERPs/master/levCatObjNon.csv",header = FALSE)
 head(levCatGA)
 ```
+
+I'll allow more flexibility in the file format at some point.
 
 You can now also add a line showing whether each time-point is significant either:
 
