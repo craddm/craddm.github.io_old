@@ -1,6 +1,9 @@
 #Jekyll configuration
 name: 'Matt Craddock'
-gems: [jekyll-paginate]
+gems: 
+  - jekyll-paginate
+  - jekyll-feed
+  - jekyll-sitemap
 
 kramdown:
     # Use GitHub flavored markdown, including triple backtick fenced code blocks
@@ -27,6 +30,3 @@ github:
 
 #google tracking
 google_analytics: UA-84391127-1
-
-gems:
-  - jekyll-feed

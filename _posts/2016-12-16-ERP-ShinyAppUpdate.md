@@ -18,7 +18,7 @@ You can now try loading up your own data. You'll need a .csv file with the follo
 * Comma-separated values
 * Each row should be one time-point, one subject, columns should be "condition1",  "condition2", "Time", "Subject"
 
-Here's an example of the first few lines of the example data I include (note this is already after important, so it's stripped the commas between values).
+Here's the first few lines of the example data I include (note this is already after import, so it's stripped the commas between values).
 
 
 ```
