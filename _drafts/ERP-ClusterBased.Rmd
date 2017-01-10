@@ -1,0 +1,108 @@
+---
+title: "ERP Visualization: Within-subject confidence intervals"
+output: html_document
+layout: post
+comments: true
+categories: [EEG, ERPs, statistics, R, ggplot2]
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,dev = 'svg')
+```
+
+In a previous post I implemented running t-tests and straightforward methods of control for multiple comparisons - Bonferroni-Holm and FDR. Another method of correcting for multiple comparisons is the non-parametric cluster-based permutation test. Let's prep the data and load all the packages I'll need.
+
+```{r prepData, message = FALSE}
+library(tidyverse)
+library(ggplot2)
+
+levCatGA <- read_csv("https://raw.githubusercontent.com/craddm/ExploringERPs/master/levCatObjNon.csv",col_names = c("Object", "Non-Object", "Time", "Subject"))
+levCatGA$Subject <- as.factor(levCatGA$Subject)
+levCatGA <- levCatGA[(levCatGA$Time >= -100)& (levCatGA$Time <= 400),] %>%
+  gather(condition,amplitude,-Subject,-Time)
+
+theme_set(theme_classic())
+
+levCat.plot <- ggplot(levCatGA,aes(Time,amplitude))+
+  scale_color_brewer(palette = "Set1")
+```
+
+Now let's run t-tests on each timepoint (again, using [***purrr***](../blog/2016/10/06/2016/10/06/ERP-Vis-Running-Tests)) 
+
+```{r runTests, message = FALSE, warning = FALSE}
+runningT <- levCatGA %>%
+    split(.$Time) %>%
+    map(~t.test(amplitude~condition,paired = TRUE,data = .))
+```
+
+I now have two lists, **runningT**, containing the t-test result for each timepoint, and **runningSE**, containing the summarized data from each time point and the corrected SEs/CIs. For example:
+
+```{r someTests}
+runningT$`0`
+runningSE$`0`
+```
+
+As before, I'll extract the p-value for each t-test and store it in a custom data-frame for later plotting. Let's plot the ERPs with standard between-subject confidence intervals.
+
+```{r betweenSubj,fig.height = 4, fig.width = 6}
+
+pvals <- data.frame(
+  Time = unique(levCatGA$Time),
+  p.value = map_dbl(runningT,"p.value")
+  )
+
+pvals$crit <- 0+(pvals$p.value <= .05)
+pvals$crit[pvals$crit == 0] <- NA
+
+levCat.plot+
+  stat_summary(fun.data = mean_cl_boot,geom = "ribbon",aes(fill = condition,colour = condition),linetype = "dashed",alpha = 0.3)+
+  guides(fill = "none")+
+  stat_summary(fun.y = mean,geom = "line",size = 1,aes(colour = condition))+
+  labs(x = "Time (ms)",y = expression(paste("Amplitude (",mu,"V)")),colour = "")+
+  geom_line(data = pvals, aes(x = Time, y = crit-3),na.rm = TRUE,size = 2)+
+  geom_vline(xintercept = 0,linetype = "dashed" )+
+  geom_hline(yintercept = 0,linetype = "dashed")
+
+```
+
+The confidence intervals in the between-subjects plot don't really help you see that the signficant timepoints are actually significant. Let's re-plot the figure using within-subject CIs. I use here some new commands. Using **map_df** from ***purrr***, I convert runningSE, a list of data frames, into a single data frame summarizing the data at each time-point after removing between-subject variability. This also uses **extract** function from ***magrittr***. I then pass this data frame to geom_ribbon to plot the corrected CIs. I could also use it to plot the ERPS, but I'll just let ggplot figure them out from the original data.
+
+
+```{r withinCI,fig.height = 4, fig.width = 6}
+
+WSCI <- map_df(runningSE,extract) %>%
+  mutate(
+    Time = rep(unique(levCatGA$Time),each =2) #Note, you'll have to change 2 to match the number of conditions
+    )
+  
+levCat.plot+
+  geom_ribbon(data = WSCI,aes(ymin = amplitude-ci,ymax = amplitude+ci,fill = condition,colour = condition),linetype="dashed",alpha = 0.3)+
+  guides(fill = "none")+
+  stat_summary(fun.y = mean,geom = "line",size = 1,aes(colour = condition))+
+  labs(x = "Time (ms)",y = expression(paste("Amplitude (",mu,"V)")),colour = "")+
+  geom_line(data = pvals, aes(x = Time, y = crit-3),na.rm = TRUE,size = 2)+
+  geom_vline(xintercept = 0,linetype = "dashed" )+
+  geom_hline(yintercept = 0,linetype = "dashed")
+
+```
+
+These confidence intervals are much narrower, reflecting the correlation between measures within participants. These intervals make it easier to see where significant differences lie from the degree of overlap between. 
+
+Finally, let's overlap the two types of confidence interval. 
+
+```{r bothTypes,fig.height = 4, fig.width = 6}
+levCat.plot+
+  stat_summary(fun.data = mean_cl_normal,geom = "ribbon",aes(colour = condition),fill = NA,linetype = "dotted",alpha = 0.3)+
+  geom_ribbon(data = WSCI,aes(ymin = amplitude-ci,ymax = amplitude+ci,fill = condition,colour = condition),linetype="dashed",alpha = 0.3)+
+  guides(fill = "none")+
+  stat_summary(fun.y = mean,geom = "line",size = 1,aes(colour = condition))+
+  labs(x = "Time (ms)",y = expression(paste("Amplitude (",mu,"V)")),colour = "")+
+  geom_line(data = pvals, aes(x = Time, y = crit-3),na.rm = TRUE,size = 2)+
+  geom_vline(xintercept = 0,linetype = "dashed" )+
+  geom_hline(yintercept = 0,linetype = "dashed")
+
+```
+
+Filled, dashed lines indicate within-subject confidence intervals, while the outer, dotted lines show the position of the between-subject confidence intervals. As we saw above, the WSCIs are much narrower, largely due to the correlation between measures from within-participants.
+
+So be careful interpreting differences from confidence intervals - check whether they show within or between subject differences before using them for Eyeball Mark I inference.

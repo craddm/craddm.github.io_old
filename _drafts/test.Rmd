@@ -10,12 +10,11 @@ library(copula)
 library(psych)
 library(afex)
 ```
-
 ```{r generateMVnorm}
 nSubs <- 24
 nTrials <- 50
 
-myCop<- normalCopula(param=0.5, dim = 3, dispstr = "ex")
+myCop<- normalCopula(param=0.6, dim = 3, dispstr = "ex")
 myMvd <- mvdc(copula=myCop, margins=c("lnorm", "lnorm","lnorm"),
               paramMargins=list(list(meanlog=0.31, sdlog=0.9),
                                 list(meanlog=0.25, sdlog=0.9),
@@ -35,50 +34,6 @@ MVNdata %>% gather(condition,power,-Subject) %>%
 ggplot(aes(x = power,fill = condition))+geom_density(alpha =.3)+facet_wrap(~Subject)
 ```
 
-```{r}
-meanSummary <- MVNdata %>%
-  gather(condition,power,-Subject) %>%
-  group_by(Subject,condition) %>%
-  summarise(meanPow = mean(power),
-            medPow = median(power),
-            sdPow = sd(power)) %>%
-  ungroup()
-
-stdSummary <- MVNdata %>%
-  gather(condition,power,-Subject) %>%
-  group_by(Subject,condition) %>%
-  summarise(sdPow = sd(power))%>%  ungroup()
-
-baseline <- meanSummary %>%
-  filter(condition == "baseline") %>%
-  select(c(1,3,4,5)) %>%
-  gather(measure,baseline,-Subject) %>%
-  arrange(Subject) 
-
-meanBaseline <- meanSummary %>% 
-  filter(condition !="baseline") %>% 
-  gather(measure,power,-Subject,-condition) %>%
-  spread(measure,power) %>%
-  inner_join(filter(baseline,measure == "meanPow"),.) %>% 
-  mutate(subBLmean = meanPow - baseline,
-         divBLmean = meanPow / baseline,
-         zBLmean = (meanPow-baseline)/sdPow,
-         subBLmed = medPow - baseline,
-         divBLmed = medPow / baseline)
-```
-
-
-```{r}
-meanBaseline %>%
-  t.test(subBLmean~condition,paired = TRUE,data = .)
-
-meanBaseline %>%
-  t.test(divBLmean~condition,paired = TRUE,data = .)
-
-meanBaseline %>%
-  t.test(zBLmean~condition,paired = TRUE,data = .)
-
-```
 ```{r}
 
 nSubs <- 24
@@ -171,61 +126,12 @@ ggplot(meanBaseline,aes(divBLmean,fill = condition))+geom_density(alpha =0.3)
 ggplot(meanBaseline,aes(zBLmean,fill = condition))+geom_density(alpha =0.3)
 
 ```
-```{r}
-meanBaselinedDiffs <- meanBaseline %>%
-  select(-baseline,-measure,-subBLmed,-divBLmed,-medPow,-sdPow) %>%
-  gather(measure,power,-Subject,-condition) %>%
-  spread(condition,power) %>%
-  mutate(difference = condA-condB)
-
-ggplot(meanBaselinedDiffs,aes(x = difference))+geom_density(alpha = 0.3)+facet_wrap(~measure)
-
-```
-
-
-```{r}
-medianBaseline <- meanSummary %>% 
-  filter(condition !="baseline") %>% 
-  gather(measure,power,-Subject,-condition) %>%
-  spread(measure,power) %>%
-  inner_join(filter(baseline,measure == "medPow"),.) %>%
-  mutate(subBLmean = meanPow - baseline,
-         divBLmean = meanPow / baseline,
-         subBLmed = medPow - baseline,
-         divBLmed = medPow / baseline)
-```
-```{r}
-medianBaseline %>%
-  t.test(subBLmean~condition,paired = TRUE,data = .)
-
-medianBaseline %>%
-  t.test(divBLmean~condition,paired = TRUE,data = .)
-
-```
-
-
-
-```{r}
-ggplot(medianBaseline,aes(subBLmean,fill = condition))+geom_density(alpha =0.3)
-ggplot(medianBaseline,aes(divBLmean,fill = condition))+geom_density(alpha =0.3)
-```
-```{r}
-medianBaselinedDiffs <- medianBaseline %>%
-  select(-baseline,-measure,-subBLmed,-divBLmed,-medPow) %>%
-  gather(measure,power,-Subject,-condition) %>%
-  spread(condition,power) %>%
-  mutate(difference = condA-condB)
-
-ggplot(medianBaselinedDiffs,aes(x = difference))+geom_density(alpha = 0.3)+facet_wrap(~measure)
-
-```
-
 
 ```{r generateMore}
 nSubs <- 24
 nTrials <- 100
 
-myCop<- normalCopula(param=0.5, dim = 6, dispstr = "ex")
+myCop<- normalCopula(param=0.3, dim = 6, dispstr = "ex")
 myMvd <- mvdc(copula=myCop, margins=c("lnorm", "lnorm","lnorm","lnorm","lnorm","lnorm"),
               paramMargins=list(list(meanlog=0.21, sdlog=1),
                                 list(meanlog=0.27, sdlog=1),
@@ -286,4 +192,3 @@ lsmip(absPow, hemisphere ~ condition)
 lsmip(subPow, hemisphere ~ condition)
 lsmip(divPow, hemisphere ~ condition)
 ```
-
