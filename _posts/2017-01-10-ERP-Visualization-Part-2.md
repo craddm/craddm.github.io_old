@@ -156,6 +156,8 @@ Ftests <- levCatGAall %>%
 levCatGAall$pval <- p.adjust(map_dbl(Ftests,c(1,6,2)),"none")
 levCatGAall$crit <- 0+(levCatGAall$pval <= .05)
 levCatGAall$crit[levCatGAall$crit == 0] <- NA
+
+#calculate the grand average ERP across all subjects and conditions
 levCatGAall$GAdiff <- levCatGAall$amplitude-(ave(levCatGAall$amplitude,levCatGAall$Time))
 
 #re-doing the CIs. Note it's not necessary to recalculate them, as they're the same - this is just an easy way for me to get them in the right format. It's not very efficient so feel free to improve it ;)
@@ -207,7 +209,7 @@ ERPdiff.plot+
 
 ![plot of chunk diffPlotGroup](/figure/source/2017-01-10-ERP-Visualization-Part-2/diffPlotGroup-1.svg)
 
-This shows that there is a significant effect of frequency around 40 ms, from around 80 to 360 ms, and from around 370 - 375 ms. Of course, we can't tell from an F-test alone which means are significantly different from each other at any given time point. But it's pretty clear that BB images elicit more positive ERPs than HSF and LSF images from around 80 - 300 ms. The CIs also help here - by around 300ms the HSF and BB image ERPs are converging, but LSF is staying more negative. Really we need to do post-hoc tests - I'll try that out in my next post.
+This shows that there is a significant effect of frequency around 40 ms, from around 80 to 360 ms, and from around 370 - 375 ms. Of course, we can't tell from an F-test alone which means are significantly different from each other at any given time point. But it's pretty clear that BB images elicit more positive ERPs than HSF and LSF images from around 80 - 300 ms. The CIs also help here - by around 300ms the HSF and BB image ERPs are converging, but LSF is staying more negative. Really we need to do post-hoc tests - I'll try that out in a follow-up post.
 
 In theory, we could also add lines for each person's difference from the grand mean...
 
@@ -217,6 +219,13 @@ ERPdiff.plot+
   guides(fill = "none")+
   labs(x = "Time (ms)", y = expression(paste("Amplitude (",mu,"V)")),colour = "")+
   stat_summary(fun.y = mean,geom = "line",size = 1,aes(y = GAdiff,group = interaction(Subject,Frequency),colour = Frequency),alpha = 0.4)+
+   geom_ribbon(data = WSCI,
+              aes(ymin = amplitude-ci,
+                  ymax = amplitude+ci,
+                  fill = Frequency,
+                  colour = Frequency),
+              linetype="dashed",
+              alpha = 0.3)+
   stat_summary(fun.y = mean,geom = "line",size = 2,aes(y = GAdiff,colour = Frequency))+
   geom_vline(xintercept = 0,linetype = "dashed" )+
   geom_hline(yintercept = 0,linetype = "dashed")
@@ -224,14 +233,14 @@ ERPdiff.plot+
 
 ![plot of chunk diffPlotIndiv](/figure/source/2017-01-10-ERP-Visualization-Part-2/diffPlotIndiv-1.svg)
 
-...but if you can make sense of that, you have better eyesight than I have. Splitting them up by condition doesn't really help a lot:
+...but if you can make sense of that, you have better eyesight than I have. Splitting them up by condition helps, but still leaves you with having to perform mental gymnastics to compare across conditions. But coupled with one of the first difference plot, that in itself might not be a huge issue.
 
 
 ```r
 ERPdiff.plot+
   guides(fill = "none")+
   labs(x = "Time (ms)", y = expression(paste("Amplitude (",mu,"V)")),colour = "")+
-  stat_summary(fun.y = mean,geom = "line",size = 1,aes(y = GAdiff,group = Subject),alpha = 0.4)+
+  stat_summary(fun.y = mean,geom = "line",size = 1,aes(y = GAdiff,group = Subject),alpha = 0.3)+
   stat_summary(fun.y = mean,geom = "line",size = 2,aes(y = GAdiff))+
   geom_vline(xintercept = 0,linetype = "dashed" )+
   geom_hline(yintercept = 0,linetype = "dashed")+
@@ -240,4 +249,4 @@ ERPdiff.plot+
 
 ![plot of chunk diffPlotIndiv2](/figure/source/2017-01-10-ERP-Visualization-Part-2/diffPlotIndiv2-1.svg)
 
-
+So at a first pass, subtracting the grand average ERP from the condition ERPs seems like a plausible way to show overall differences across three conditions. I'll post soon on doing pairwise comparisons between those three conditions.
