@@ -1,0 +1,166 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+
+
+```{r}
+library(tidyverse)
+library(ggplot2)
+library(copula)
+library(psych)
+library(afex)
+```
+
+```{r genE1dat}
+nSubs <- 24
+nTrials <- 30
+
+myCop<- normalCopula(param=0.5, dim = 4)
+E1Mvd <- mvdc(copula=myCop, margins=c("norm", "norm","norm","norm"),
+              paramMargins=list(list(mean=2.4, sd=2),
+                                list(mean=2.1, sd=2),
+                                list(mean=2.0,sd=2),
+                                list(mean=2.0,sd=2)
+                                ))
+
+E1data <- replicate(nSubs,rMvdc(nTrials,E1Mvd),simplify = FALSE)
+E1data <- bind_rows(lapply(E1data, data.frame, stringsAsFactors = FALSE)) %>%
+  mutate(Subject = rep(1:nSubs,each = nTrials)) 
+  names(E1data) <- c("E1.condA","E1.condB","E1.baselineA","E1.baselineB","Subject")
+
+E1Summary <- E1data %>%
+    gather(condition, amplitude, -Subject) %>%
+    group_by(Subject, condition) %>%
+    summarise(
+      meanPow = mean(amplitude^2)
+      ) %>% 
+    ungroup() %>%
+  separate(condition, c("Electrode","condition"))
+  
+pairs.panels(E1data[1:4])
+```
+
+
+```{r generateE2dat}
+E2mvd <- mvdc(copula=myCop, margins=c("norm", "norm","norm","norm"),
+              paramMargins=list(list(mean=2.4, sd=2),
+                                list(mean=2.1, sd=2),
+                                list(mean=1,sd=2),
+                                list(mean=2,sd=2)
+                                ))
+
+E2data <- replicate(nSubs,rMvdc(nTrials,E2mvd),simplify = FALSE)
+E2data <- bind_rows(lapply(E2data, data.frame, stringsAsFactors = FALSE)) %>%
+  mutate(Subject = rep(1:nSubs,each = nTrials)) 
+  names(E2data) <- c("E2.condA","E2.condB","E2.baselineA","E2.baselineB","Subject")
+
+E2Summary <- E2data %>%
+    gather(condition, amplitude, -Subject) %>%
+    group_by(Subject, condition) %>%
+    summarise(
+      meanPow = mean(amplitude^2)
+      ) %>% 
+    ungroup() %>%
+  separate(condition, c("Electrode","condition"))
+pairs.panels(E2data[1:4])
+```
+
+```{r}
+baselines<-full_join(E1Summary %>% filter(condition == "baselineA" | condition == "baselineB") %>% group_by(Subject,Electrode) %>% summarise(basePow = mean(meanPow)), E2Summary %>% filter(condition == "baselineA" | condition == "baselineB") %>% group_by(Subject,Electrode) %>% summarise(basePow = mean(meanPow))) 
+
+#baselines$condition<- gl(2,1,labels = c("condA","condB"))
+
+baselined <- full_join(
+  filter(E1Summary,condition == "condA" | condition == "condB"),
+  filter(E2Summary,condition == "condA" | condition == "condB")
+  ) %>% 
+  right_join(baselines) %>% 
+  mutate(subMean = meanPow-basePow,divMean = meanPow/basePow)
+```
+
+```{r}
+aov_ez(id = "Subject",dv="meanPow",data = baselined,within = c("Electrode","condition"))
+aov_ez(id = "Subject",dv="subMean",data = baselined,within = c("Electrode","condition"))
+aov_ez(id = "Subject",dv="divMean",data = baselined,within = c("Electrode","condition"))
+```
+```{r}
+baselined %>% group_by(Electrode) %>% summarise(meanPow = mean(meanPow),subMean = mean(subMean),divMean = mean(divMean),basePow = mean(basePow))
+
+baselined %>% group_by(condition) %>% summarise(meanPow = mean(meanPow),subMean = mean(subMean),divMean = mean(divMean),basePow = mean(basePow))
+
+baselined %>% group_by(Electrode,condition) %>% summarise(meanPow = mean(meanPow),subMean = mean(subMean),divMean = mean(divMean),basePow = mean(basePow))
+
+```
+
+
+```{r}
+ nSubs <- 20
+nTrials <- 30
+
+myCop<- normalCopula(param=0.5, dim = 4)
+tmpFunc <- function(x) {
+  E1Mvd <- mvdc(copula=myCop, margins=c("norm", "norm","norm","norm"),
+              paramMargins=list(list(mean=2.2, sd=2),
+                                list(mean=2.1, sd=2),
+                                list(mean=2.0,sd=2),
+                                list(mean=2.0,sd=2)
+                                ))
+  E1data <- replicate(nSubs,rMvdc(nTrials,E1Mvd),simplify = FALSE)
+  E1data <- bind_rows(lapply(E1data, data.frame, stringsAsFactors = FALSE)) %>%
+    mutate(Subject = rep(1:nSubs,each = nTrials)) 
+  names(E1data) <- c("E1.condA","E1.condB","E1.baselineA","E1.baselineB","Subject")
+
+E1Summary <- E1data %>%
+    gather(condition, amplitude, -Subject) %>%
+    group_by(Subject, condition) %>%
+    summarise(
+      meanPow = mean(amplitude^2),
+      meanPowSq = mean(amplitude^2),
+      meanPowLog = mean(log(amplitude^2))
+      ) %>% 
+    ungroup() %>%
+  separate(condition, c("Electrode","condition"))
+
+  baseline <- E1Summary %>% 
+    filter(condition == "baselineA" | condition == "baselineB") %>%
+    group_by(Subject) %>%
+    summarise(basePow = mean(meanPow),
+              basePowLog = mean(meanPowLog))
+  baselined <- right_join(filter(E1Summary,condition == "condA" | condition == "condB"),baseline,by = "Subject") %>%
+    mutate(
+      subBLmean = meanPow - basePow,
+      divBLmean = meanPow / basePow,
+      subBlog = meanPowLog - basePowLog,
+      divBlog = meanPowLog / basePowLog
+      )
+
+  noBl <- t.test(meanPow~condition,paired = TRUE,data = baselined)
+  subBl <- t.test(subBLmean~condition,paired = TRUE,data = baselined)
+  divBl <- t.test(divBLmean~condition,paired = TRUE,data = baselined)
+  
+  noBlLog <- t.test(meanPowLog~condition,paired = TRUE,data = baselined)
+  subBlLog <- t.test(subBlog~condition,paired = TRUE,data = baselined)
+  divBlLog <- t.test(divBlog~condition,paired = TRUE,data = baselined)
+  #subBlMed <- t.test(subBLmean~condition,paired = TRUE,data = medBaseline)
+  #divBlMed <- t.test(divBLmean~condition,paired = TRUE,data = medBaseline)
+  #zBlMed <- t.test(zBLmean~condition,paired = TRUE,data = medBaseline)
+  
+  return(list("noBl" = noBl$p.value,"subP" = subBl$p.value,"divP" = divBl$p.value,"noBlog" = noBlLog$p.value,"subPlog" = subBlLog$p.value,"divPlog" = divBlLog$p.value))
+  
+  
+  #return(list("noBl" = noBl$p.value,"subP" = subBl$p.value,"divP" = divBl$p.value,"ZP" = zBl$p.value,"subMedP" = subBlMed$p.value,"divMedP" = divBlMed$p.value,"zBlMed" = zBlMed$p.value))
+  }
+out <- replicate(1000,tmpFunc(1))
+```
+
+```{r}
+mean(out[1,] < .05)
+mean(out[2,] < .05)
+mean(out[3,] < .05)
+mean(out[4,] < .05)
+mean(out[5,] < .05)
+mean(out[6,] < .05)
+```
+

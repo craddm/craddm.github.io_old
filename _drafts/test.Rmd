@@ -16,9 +16,9 @@ nTrials <- 50
 
 myCop<- normalCopula(param=0.6, dim = 3, dispstr = "ex")
 myMvd <- mvdc(copula=myCop, margins=c("lnorm", "lnorm","lnorm"),
-              paramMargins=list(list(meanlog=0.31, sdlog=0.9),
-                                list(meanlog=0.25, sdlog=0.9),
-                                list(meanlog=(0.28+rnorm(1,mean = 0,sd = 0.05)),sdlog=1)
+              paramMargins=list(list(meanlog=0.3, sdlog=0.9),
+                                list(meanlog=0.3, sdlog=0.9),
+                                list(meanlog=(0.3+rnorm(1,mean = 0,sd = 0.05)),sdlog=1)
                                 ))
 
 MVNdata <- replicate(nSubs,rMvdc(nTrials,myMvd),simplify = FALSE)
@@ -43,9 +43,9 @@ myCop<- normalCopula(param=0.5, dim = 3)
 tmpFunc <- function(x) {
   MVNdata <- replicate(nSubs,{
     myMvd <- mvdc(copula=myCop, margins=c("lnorm", "lnorm","lnorm"),
-                  paramMargins=list(list(meanlog=(0.25+rnorm(1,mean = 0,sd = 0.03)), sdlog=1.5),
-                                    list(meanlog=(0.40+rnorm(1,mean = 0,sd = 0.03)), sdlog=1.5),
-                                    list(meanlog=(0.31+rnorm(1,mean = 0,sd = 0.03)),sdlog=0.5)))
+                  paramMargins=list(list(meanlog=(0.3+rnorm(1,mean = 0,sd = 0.03)), sdlog=1),
+                                    list(meanlog=(0.3+rnorm(1,mean = 0,sd = 0.03)), sdlog=1),
+                                    list(meanlog=(0.3+rnorm(1,mean = 0,sd = 0.03)),sdlog=1)))
     rMvdc(nTrials, myMvd)}, simplify = FALSE)
   
   MVNdata <-bind_rows(lapply(MVNdata, data.frame, stringsAsFactors = FALSE)) %>%
@@ -149,6 +149,7 @@ MVNdata <- bind_rows(lapply(MVNdata, data.frame, stringsAsFactors = FALSE)) %>%
 pairs.panels(MVNdata[1:6],method = "spearman")
 
 ```
+
 ```{r}
 meanSummary<- MVNdata %>%
     gather(condition, power, -Subject) %>%

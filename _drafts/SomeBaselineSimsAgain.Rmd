@@ -1,0 +1,116 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+
+```{r loadPacks}
+library(tidyverse)
+library(ggplot2)
+library(copula)
+library(psych)
+library(afex)
+```
+
+
+```{r generateCorrData}
+nSubs <- 24
+nTrials <- 50
+
+myCop<- normalCopula(param=0.5, dim = 4)
+myMvd <- mvdc(copula=myCop, margins=c("norm", "norm","norm","norm"),
+              paramMargins=list(list(mean=3, sd=2),
+                                list(mean=3, sd=2),
+                                list(mean=2,sd=0.7),
+                                list(mean=1,sd=0.7)
+                                ))
+
+MVNdata <- replicate(nSubs,rMvdc(nTrials,myMvd),simplify = FALSE)
+MVNdata <- bind_rows(lapply(MVNdata, data.frame, stringsAsFactors = FALSE)) %>%
+  mutate(Subject = rep(1:nSubs,each = nTrials)) 
+  names(MVNdata) <- c("condA","condB","baselineA","baselineB","Subject")
+
+pairs.panels(MVNdata[1:4])
+```
+
+```{r squareDat}
+pairs.panels(MVNdata[1:4]^2)
+pairs.panels(log(MVNdata[1:4]^2),method = "spearman")
+```
+
+```{r summDat}
+ meanSummary <- MVNdata %>%
+    gather(condition, amplitude, -Subject) %>%
+    group_by(Subject, condition) %>%
+    summarise(
+      meanPow = mean(amplitude^2)
+      ) %>% 
+    ungroup()
+
+ medianSummary <- MVNdata %>%
+    gather(condition, amplitude, -Subject) %>%
+    group_by(Subject, condition) %>%
+    summarise(
+      medianPow = median(amplitude^2)
+      ) %>% 
+    ungroup()
+```
+
+```{r baseMean}
+baselined <- meanSummary %>% spread(condition,meanPow) %>% mutate(baseline = (baselineA+baselineB)/2) %>% select(-baselineA,-baselineB)
+
+t.test(baselined$condA, baselined$condB,paired = TRUE)
+t.test(baselined$condA-baselined$baseline, baselined$condB-baselined$baseline,paired = TRUE)
+t.test(baselined$condA/baselined$baseline, baselined$condB/baselined$baseline,paired = TRUE)
+  
+```
+
+```{r baseMed}
+baselineMed <- medianSummary %>% spread(condition,medianPow) %>% mutate(baseline = (baselineA+baselineB)/2) %>% select(-baselineA,-baselineB)
+
+t.test(baselineMed$condA, baselineMed$condB,paired = TRUE)
+t.test(baselineMed$condA-baselineMed$baseline, baselineMed$condB-baselineMed$baseline,paired = TRUE)
+t.test(baselineMed$condA/baselineMed$baseline, baselineMed$condB/baselineMed$baseline,paired = TRUE)
+```
+```{r meanPowMedBase}
+t.test(baselined$condA-baselineMed$baseline, baselined$condB-baselineMed$baseline,paired = TRUE)
+t.test(baselined$condA/baselineMed$baseline, baselined$condB/baselineMed$baseline,paired = TRUE)
+```
+```{r logTran}
+ meanLogSummary <- MVNdata %>%
+    gather(condition, amplitude, -Subject) %>%
+    group_by(Subject, condition) %>%
+    summarise(
+      meanPow = mean(log(amplitude^2))
+      ) %>% 
+    ungroup()
+
+ medianLogSummary <- MVNdata %>%
+    gather(condition, amplitude, -Subject) %>%
+    group_by(Subject, condition) %>%
+    summarise(
+      medianPow = median(log(amplitude^2))
+      ) %>% 
+    ungroup()
+```
+
+
+```{r logMea}
+baselinedLog <- meanLogSummary %>% spread(condition,meanPow) %>% mutate(baseline = (baselineA+baselineB)/2) %>% select(-baselineA,-baselineB)
+
+t.test(baselinedLog$condA, baselinedLog$condB,paired = TRUE)
+t.test(baselinedLog$condA-baselinedLog$baseline, baselinedLog$condB-baselinedLog$baseline,paired = TRUE)
+#t.test(baselineMed$condA/baselineMed$baseline, baselineMed$condB/baselineMed$baseline,paired = TRUE)
+```
+```{r baselogMd}
+baselineLogMed <- medianLogSummary %>% spread(condition,medianPow) %>% mutate(baseline = (baselineA+baselineB)/2) %>% select(-baselineA,-baselineB)
+
+t.test(baselineLogMed$condA, baselineLogMed$condB,paired = TRUE)
+t.test(baselineLogMed$condA-baselineLogMed$baseline, baselineLogMed$condB-baselineLogMed$baseline,paired = TRUE)
+t.test(baselineLogMed$condA/baselineLogMed$baseline, baselineLogMed$condB/baselineLogMed$baseline,paired = TRUE)
+```
+
+```{r}
+t.test(baselinedLog$condA-baselineLogMed$baseline, baselinedLog$condB-baselineLogMed$baseline,paired = TRUE)
+```
+

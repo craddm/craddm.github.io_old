@@ -1,0 +1,61 @@
+---
+title: "EEG preprocessing and visual inspection"
+author: "Matt Craddock"
+date: "16 January 2017"
+layout: post
+comments: true
+categories: [EEG, eeglab, matlab]
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## EEG pre-processing
+
+Over on Twitter recently, [Anne Scheel]("") asked about standards for visual inspection of EEG data for artefact rejection. Visual inspection is one of several typical but generally undocumented steps in the process of converting continuous raw EEG data into something more palatable, such as a collection of ERPs from various conditions for statistical analysis. 
+
+Scheel and several others raised valid concerns about the implications of visual inspection in terms of reproducibility, replicability, and circularity. For example, in principle a researcher performing visual inspection could be biased to favour one condition over another, may have different thresholds and tolerances for artefacts than another researcher, and may not even reject the same data when repeating the process themselves. 
+
+## 
+
+I think replicability and reproducibility are bigger issues than circularity. There are 
+
+
+
+Several people raised the use of automated tools for artefact rejection, and in somes cases use only those tools, skipping visual inspection altogether. I can see the appeal: algorithms don't get tired, don't change their thresholds as they get bored, and should always give the same results. Visually inspecting full datasets takes a long time to do carefully, and even the most experienced researchers won't necessarily always make the same decisions.
+
+But while I love the idea of fully automating artefact rejection during pre-processing, I'm not fully there yet. In practice, I use a combined approach. I use automated tools to mark artefacts, but I still inspect the whole dataset manually. The reason is that I have yet to find an automated tool that gives me results I've been consisently happy with. 
+
+I've seen automated tools miss comically bad channels, stretches of data, or both. I've seen them reject sections of data that no human would ever reject, for no discernible reason (not all of them report why). I've seen them miss subtle artefacts that nevertheless can cause massive problems, particularly in time-frequency analysis. And it can be hard to get them to ignore artefacts you don't care about.
+
+
+
+They have often have fairly opaque parameters on which to base their rejections with no clear guidelines for
+
+Visual selection for artefact rejection is quite distinct from the process of visual selection for statistical analysis, which is also a common but questionable procedure. There is a reason why visual selection for statistical analysis is usually done at the level of grand means: at the grand mean level, signal is clearly distinguishable from noise, and one can trivially see where potential differences between conditions exist. At the single trial level, it rarely is. 
+
+```{r cars}
+summary(cars)
+```
+
+## Automated rejection procedures
+
+There are now quite a range of automated procedures.
+
+Statistical Correction of Artefacts in Dense Arrays
+
+FASTER
+
+PREP
+
+ASR
+AUTOREJECT
+
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
