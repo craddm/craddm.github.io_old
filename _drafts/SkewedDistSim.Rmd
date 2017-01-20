@@ -1,0 +1,64 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+
+```{r loadpackages}
+library(tidyverse)
+library(ggplot2)
+library(copula)
+library(psych)
+library(afex)
+library(mvtnorm)
+```
+
+We can generate a random distribution with certain characteristics which represents the population of interest, calculate its mean or any other appropriate statistic, and see how close various random draws and statistical methods get to finding that statistic. 
+
+Friston et al suggest that if the underlying data is normally distributed, then EEG data will have a chi-square distribution with 2 degrees of freedom, so let's start off with that. A chi-square distribution is a special case of a gamma distribution of scale 2 and shape n/2, where n = degrees of freedom.
+
+```{r}
+simulation <- rgamma(1000000,2,0.5)
+qplot(simulation)
+mean(simulation)
+median(simulation)
+```
+
+Now we have our reference distribution. Suppose I draw 100 samples from this distribution. I can then calculate the mean and see how it compares to the population mean. And in fact I can do this over and over again to see whether there is anything systematic in how the sample means relate to the population means. To do this I'll create a custom function that takes random samples and returns the mean.
+
+```{r}
+nSamps <- 20
+
+randSamp <- function (x, nSamps) {
+  testMean <- sample(x,nSamps)
+  return(list("meds" = median(testMean),"means" = mean(testMean)))
+}
+
+
+out <- replicate(10000,randSamp(simulation,nSamps))
+mean(unlist(out[1,]))
+mean(unlist(out[2,]))
+qplot(unlist(out[1,])-median(simulation),geom = "density")
+qplot(unlist(out[2,])-mean(simulation),geom = "density")
+
+```
+
+
+
+```{r generateCorrData}
+nSubs <- 1
+nTrials <- 100000
+
+myCop<- normalCopula(param=0.5, dim = 2)
+myMvd <- mvdc(copula=myCop, margins=c("gamma", "gamma"),
+              paramMargins=list(list(shape=2, scale=2),
+                                list(shape=2, scale=2)
+                                ))
+
+MVNdata <- replicate(nSubs,rMvdc(nTrials,myMvd),simplify = FALSE)
+MVNdata <- bind_rows(lapply(MVNdata, data.frame, stringsAsFactors = FALSE)) %>%
+  mutate(Subject = rep(1:nSubs,each = nTrials)) 
+  names(MVNdata) <- c("condA","condB","Subject")
+
+pairs.panels(MVNdata[1:2])
+```
