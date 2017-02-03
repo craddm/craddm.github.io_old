@@ -15,7 +15,7 @@ library(mvtnorm)
 
 We can generate a random distribution with certain characteristics which represents the population of interest, calculate its mean or any other appropriate statistic, and see how close various random draws and statistical methods get to finding that statistic. 
 
-Friston et al suggest that if the underlying data is normally distributed, then EEG data will have a chi-square distribution with 2 degrees of freedom, so let's start off with that. A chi-square distribution is a special case of a gamma distribution of scale 2 and shape n/2, where n = degrees of freedom.
+Friston et al suggest that if the underlying data is normally distributed, then EEG data will have a chi-square distribution with 2 degrees of freedom. Let's start off with that. A chi-square distribution is a special case of a gamma distribution of scale 2 and shape n/2, where n = degrees of freedom.
 
 ```{r}
 simulation <- rgamma(1000000,2,0.5)
@@ -34,13 +34,19 @@ randSamp <- function (x, nSamps) {
   return(list("meds" = median(testMean),"means" = mean(testMean)))
 }
 
-
 out <- replicate(10000,randSamp(simulation,nSamps))
-mean(unlist(out[1,]))
-mean(unlist(out[2,]))
-qplot(unlist(out[1,])-median(simulation),geom = "density")
-qplot(unlist(out[2,])-mean(simulation),geom = "density")
+zz <- data.frame(meds = unlist(out[1,]),means = unlist(out[2,]))
+# mean(unlist(out[1,]))
+# mean(unlist(out[2,]))
+# qplot(unlist(out[1,]),geom = "density")
+# qplot(unlist(out[2,]),geom = "density")
 
+zz %>% 
+  gather(measure, value) %>%
+  ggplot(aes(x = value,fill = measure))+
+  geom_density(alpha = 0.3) +
+  geom_vline(xintercept = mean(simulation))+
+  geom_vline(xintercept = median(simulation))
 ```
 
 

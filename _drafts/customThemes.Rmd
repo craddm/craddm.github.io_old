@@ -1,0 +1,45 @@
+---
+title: 'EEG visualization: custom themes for ggplot2'
+author: "Matt Craddock"
+date: "22 January 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+```
+
+I like to keep my software up-to-date. However, this sometimes has unintended consequences. If you look through my previous blog posts carefully, you may notice something about the plots: the style changes. Some plots have gridlines, others do not. Some have lines on the x and y axes, others do not. Some have only tick marks, and don't have gridlines. If you look even more carefully, and you're already familiar with ggplot2's themes, you may even  notice that sometimes I apply the same theme to plots that have different styles.
+
+Some of the recent updates to ggplot2 have changed some aspects of the built-in themes. So for the sake of 1) replicability and 2) your sanity, it's best if you define your preferred theme directly in code rather than rely on the built-in defaults.
+
+```{r mpg}
+ggplot(mpg, aes(x = cty, y = hwy, color = factor(cyl))) +
+  geom_jitter() +
+  labs(
+    x = "City mileage/gallon",
+    y = "Highway mileage/gallon",
+    color = "Cylinders"
+  )+
+theme(
+    axis.text = element_text(size = 14),
+    legend.key = element_rect(fill = "navy"),
+    legend.background = element_rect(fill = "white"),
+    legend.position = c(0.14, 0.80),
+    #panel.grid.major = element_line(colour = "grey40"),
+    #panel.grid.minor = element_blank(),
+   panel.background = element_blank(),
+   element_line(2,linetype = "dashed")
+  )
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
