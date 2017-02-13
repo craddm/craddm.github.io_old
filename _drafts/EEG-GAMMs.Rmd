@@ -1,0 +1,78 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+
+```{r}
+library(mgcv)
+library(itsadug)
+```
+
+```{r}
+firstGam <- gam(amplitude ~ condition + s(Time,by =condition,bs = "cr"),data = levCatGA,method = "ML")
+summary(firstGam)
+```
+
+```{r}
+levCatGA$conditionOrd <- as.ordered(levCatGA$condition)
+diffGam <- gam(amplitude ~ conditionOrd + s(Time,bs = "cr") + s(Time,by = conditionOrd,bs = "cr"),data = levCatGA,method = "ML")
+summary(diffGam)
+```
+
+```{r}
+nullGam <- gam(amplitude ~ s(Time,bs = "cr"),data = levCatGA,method = "ML")
+summary(nullGam)
+compareML(diffGam,nullGam)
+```
+
+```{r}
+plot_smooth(diffGam,view = "Time",plot_all = "conditionOrd",rug = F)
+plot_diff(diffGam,view = "Time",comp=list(conditionOrd=c("Object","Non-Object")))
+```
+let's do a random intercept only GAMM
+```{r}
+firstGAMM <- gam(amplitude ~ conditionOrd + s(Time, bs = "cr")+ s(Time,by = conditionOrd,bs ="cr")+s(Subject,bs = "re"),data = levCatGA )
+summary(firstGAMM)
+```
+now a random intercept + slope GAMM
+```{r}
+secondGAMM <- gam(amplitude ~ conditionOrd + s(Time, bs = "cr")+ s(Time,by = conditionOrd,bs ="cr")+s(Subject,bs = "re") + s(Subject,Time,bs ="re"),data = levCatGA )
+summary(secondGAMM)
+```
+finally a model with random smooths
+
+```{r}
+thirdGAMM <- gam(amplitude ~ conditionOrd + s(Time, bs = "cr")+ s(Time,by = conditionOrd,bs ="cr")+ s(Time,Subject,bs ="fs",m=1,xt = "cr"),data = levCatGA)
+summary(thirdGAMM)
+
+```
+
+```{r}
+#hmmm, really weird............
+
+simpleGAMM <- gam(amplitude ~ s(Time)+s(Time,Subject,bs = "fs",m =1),data = levCatGA)
+
+summary(simpleGAMM)
+```
+```{r}
+addCondGAMM <- gam(amplitude ~ conditionOrd + s(Time)+s(Time,Subject,bs = "fs",m =1),data = levCatGA)
+summary(addCondGAMM)
+```
+
+```{r}
+ranSmooCondGAMM <- gam(amplitude ~ conditionOrd + s(Time, by = conditionOrd,bs = "cr",k = 10) + s(Time,bs = "cr",k = 10)+s(Time,Subject,bs = "fs",m =1,k = 10),data = levCatGA)
+summary(ranSmooCondGAMM)
+```
+```{r}
+plot_smooth(ranSmooCondGAMM,view = "Time",plot_all = "conditionOrd",rug = F)
+plot_diff(ranSmooCondGAMM,view = "Time",comp=list(conditionOrd=c("Object","Non-Object")))
+```
+
+```{r}
+ranSmooCondGAMM <- bam(amplitude ~ conditionOrd + s(Time, by = conditionOrd,bs = "cr",k = 10) + s(Time,bs = "cr",k = 10)+s(Time,Subject,bs = "fs",m =1,k = 10),data = levCatGA)
+```
+
