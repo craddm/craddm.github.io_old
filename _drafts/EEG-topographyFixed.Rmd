@@ -1,0 +1,160 @@
+---
+title: "ERP Visualization: Topographies"
+output: html_document
+layout: post
+comments: true
+categories: [EEG, ERPs, R, ggplot2]
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,dev = 'svg')
+```
+
+As well as ERPs or time-frequency plots from individual channels, it's always useful to see topographical maps of our data. It's a nice way to see what's going on across the whole head, showing us whether effects are broadly or narrowly distributed across the whole scalp. So now I'm going to show you how to do topographical plots in R.
+
+I want to first of all thank the **alexforrance** and **Harold Cavendish** over on [Stack Overflow] (http://stackoverflow.com/questions/35019382/topoplot-in-ggplot2-2d-visualisation-of-e-g-eeg-data) for being the source of the code I've adapted here.
+
+To start off, as usual, we'll load up some test data and some useful packages. I'll be using the usual *tidyverse* packages, including *ggplot2*, and two other packages which will allow two alternative approaches to producing the topographies: *akima*, and *mgcv*. 
+
+The test data is the amplitude at 64 scalp electrodes at timepoints from approximately -.2s before to .6s after stimulus onset. Each row is a timepoint, each column an electrodes, with a final, extra column indicating the actual time for each row. This is data from a single subject, but of course any suitable data can be used.
+
+We load that in and convert it to long format - each row is now the amplitude from a single timepoint for a single electrode. We also need electrode locations. Let's load in some I saved from EEGLAB. I simply saved them in .loc format, which is formatted as four columns - channel number, theta, radius, and label - with each row being one electrode. 
+
+```{r prepData, message = FALSE}
+library(tidyverse)
+library(akima)
+library(scales)
+topotest <- read_csv("https://raw.githubusercontent.com/craddm/ExploringERPs/master/topographyTest.csv") %>%
+  gather(electrode,amplitude,-Times)
+topotest$amplitude <- as.double(topotest$amplitude)
+electrodeLocs <- read_delim("https://raw.githubusercontent.com/craddm/ExploringERPs/master/biosemi70elecs.loc", "\t", escape_double = FALSE, col_names = c("chanNo","theta","radius","electrode"), trim_ws = TRUE)
+
+```
+
+As you know, EEG electrode locations are not on a flat surface. Thus, the locations we have describe their position in 3D space (in this instance, their position on a sphere). To get a 2D topographical plot, we need to project them into 2D. 
+
+```{r projectElecs}
+radianTheta <- pi/180*electrodeLocs$theta
+electrodeLocs <- electrodeLocs %>%
+  mutate(x = .$radius*sin(radianTheta),
+         y = .$radius*cos(radianTheta))
+ggplot(electrodeLocs,aes(theta,radius,label = electrode))+geom_text()+theme_bw()
+ggplot(electrodeLocs,aes(x,y,label = electrode))+geom_text()+theme_bw()+coord_quickmap()
+
+```
+
+As you can see, the original co-ordinates don't really plot too well in 2D, but our projected versions plot very nicely. Note that this location file also includes locations for M1 and M2 and four ocular electrodes. They'll disappear later as the data we loaded up doesn't include these electrodes.
+
+I don't need the axes here, so let's create a custom theme that gets rid of the unwanted extras.
+```{r defineTheme}
+theme_topo <- function(base_size = 12)
+  {
+  theme_bw(base_size = base_size) %+replace%
+      theme(
+            rect             = element_blank(),
+            line             = element_blank(),
+            axis.text = element_blank(),
+            axis.title = element_blank()
+            
+           )
+}
+
+ggplot(electrodeLocs,aes(x,y,label = electrode))+geom_text()+theme_topo()+coord_quickmap()
+```
+
+So now we've got out electrode locations mapped into 2D space, and data for all timepoints, for all electrodes. What next? Let's combine our data and electrode locations into a single data frame. To do that I call **left_join** to mash them together using electrode to match rows across the two data frames. This finds matching electrodes between the locations file and the data and combines them where possible, so, for example, the new file will have locations for all the electrodes in the data but won't have rows for M1/M2 etc., since they're not in the data. In this way you can use any location file at all that has matching electrode labels with those in your data.
+
+```{r badPlot}
+allData <- topotest %>% left_join(electrodeLocs, by = "electrode")
+allData
+```
+
+Nearly there. Most of the time with topographies you're going to want some sort of headmodel. The code I stole from Stack Overflow, linked earler, only went so far as drawing a circle and a nose. The ears are ab it more complicated and neither they nor I have yet gone to the trouble of figuring out how to draw them. Anyway, what we'll need to start with is a circle. We'll define a function that can create circles of arbitrary sizes. That's useful when we want to use different electrode locations so we can scale the circle appropriately.
+
+
+```{r createHeadmodel}
+circleFun <- function(center = c(0,0),diameter = 1, npoints = 100){
+  r = diameter / 2
+  tt <- seq(0,2*pi,length.out = npoints)
+  xx <- center[1] + r * cos(tt)
+  yy <- center[2] + r * sin(tt)
+  return(data.frame(x = xx, y = yy))
+}
+
+circledat <- circleFun(c(0, 0), round(max(electrodeLocs$x)), npoints = 100) # center on [.5, .5]
+ggplot(circledat,aes(x,y))+
+  geom_path()+
+  geom_text(data = electrodeLocs,aes(x,y,label = electrode))+
+  theme_topo()+
+  coord_quickmap()
+  
+```
+
+Looks about right here - similar principle to EEGLAB, electrodes below the "rim" are outside of the main circle. Let's pick a timepoint completely at random and plot the amplitude at each electrode at that timepoint in the appropriate location. I'll also add a function to replicate the default Matlab colourmap, "jet".
+
+```{r skittleFactory}
+jet.colors <-
+  colorRampPalette(c("#00007F", "blue", "#007FFF", "cyan",
+                     "#7FFF7F", "yellow", "#FF7F00", "red", "#7F0000"))
+timeZero <- filter(allData,Times == 0)
+
+ggplot(circledat,aes(x,y))+
+  geom_path()+
+  geom_point(data = timeZero,aes(x,y,colour = amplitude),size = 3)+
+  scale_colour_gradientn(colours = jet.colors(10),guide = "colourbar",oob = squish)+
+  theme_topo()+
+  coord_quickmap()
+```
+
+It looks like somebody spilt a packet of Skittles. We need to do something else!
+
+The electrodes are a sparse grid with lots of gaps in-between. To create those nice smooth maps we're so used to seeing, we need to do some interpolation!
+
+This is where *akima* and *mgcv* come in. First, let's deal with akima. **Akima** includes a tool for interpolation of irregularly spaced grids using either linear or cubic splines. I'll use Akima to a do cubic spline interpolation, extrapolating beyond the confines of the grid specified by the electrodes. The nx and ny parameters here adjust the number of interpolated points and thus the smoothness of the output.
+
+```{r interpTopo}
+tmpTopo <- with(timeZero, interp(x = x, y = y, z = amplitude,xo = seq(min(x)*2, max(x)*2,length = 164), yo = seq(min(y)*2, max(y)*2, length = 164),linear = FALSE,extrap = TRUE)) 
+
+interpTopo <- data.frame(x = tmpTopo$x,tmpTopo$z)
+names(interpTopo)[1:length(tmpTopo$y)+1] <- tmpTopo$y
+
+interpTopo <-gather(interpTopo,key = y, value = amplitude,-x,convert = TRUE) 
+interpTopo$incircle <- (interpTopo$x)^2 + (interpTopo$y)^2 < 0.7^2 # mark
+
+datmat4 <- interpTopo[interpTopo$incircle,]
+datmat4 %>%
+  ggplot(aes(x = x,y= y,fill = amplitude))+
+  geom_raster()+
+  stat_contour(aes(z = amplitude))+
+  theme_topo()+
+  scale_fill_gradientn(colours = jet.colors(10),limits = c(-.73,.73),guide = "colourbar",oob = squish)+
+  #scale_colour_gradientn(colours = jet.colors(10),limits = c(-.73,.73),guide = "colourbar",oob = squish)+
+  geom_point(data =timeZero,aes(x,y,fill = amplitude),size = 3)+
+  geom_path(data = circledat,aes(x,y,z = NULL,fill = NULL))+
+  coord_quickmap()
+
+```
+
+```{r}
+library(mgcv)
+spl1 <- gam(amplitude ~ s(x, y, bs = 'sos'), data = timeZero)
+# fine grid, coarser is faster
+datmat2 <- data.frame(expand.grid(x = seq(round(min(timeZero$x)),round(max(timeZero$x)), 0.02), y = seq(min(timeZero$y),max(timeZero$y), 0.01)))
+resp <- predict(spl1, datmat2, type = "response")
+datmat2$value <- resp
+# ignore anything outside the circle
+datmat2$incircle <- (datmat2$x)^2 + (datmat2$y)^2 < .7^2 # mark
+datmat2 <- datmat2[datmat2$incircle,]
+```
+
+```{r topoplot}
+ggplot(datmat2, aes(x, y, fill = value)) +
+  geom_raster()+
+  stat_contour(aes(z = value))+
+  theme_topo()+
+  scale_fill_gradientn(colours = jet.colors(10),limits = c(-.73,.73),guide = "colourbar",oob = squish)+
+  scale_colour_gradientn(colours = jet.colors(10),limits = c(-.73,.73),guide = "colourbar",oob = squish)+
+  geom_point(data =timeZero,aes(x,y,colour = amplitude,fill = NULL))+
+  geom_path(data = circledat,aes(x,y,z = NULL,fill = NULL))+
+  coord_quickmap()
+```
