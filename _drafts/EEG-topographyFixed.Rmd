@@ -36,10 +36,11 @@ As you know, EEG electrode locations are not on a flat surface. Thus, the locati
 
 ```{r projectElecs}
 radianTheta <- pi/180*electrodeLocs$theta
+electrodeLocs$radianTheta <- radianTheta
 electrodeLocs <- electrodeLocs %>%
   mutate(x = .$radius*sin(radianTheta),
          y = .$radius*cos(radianTheta))
-ggplot(electrodeLocs,aes(theta,radius,label = electrode))+geom_text()+theme_bw()
+ggplot(electrodeLocs,aes(radianTheta,radius,label = electrode))+geom_text()+theme_bw()
 ggplot(electrodeLocs,aes(x,y,label = electrode))+geom_text()+theme_bw()+coord_quickmap()
 
 ```
@@ -114,7 +115,7 @@ The electrodes are a sparse grid with lots of gaps in-between. To create those n
 This is where *akima* and *mgcv* come in. First, let's deal with akima. **Akima** includes a tool for interpolation of irregularly spaced grids using either linear or cubic splines. I'll use Akima to a do cubic spline interpolation, extrapolating beyond the confines of the grid specified by the electrodes. The nx and ny parameters here adjust the number of interpolated points and thus the smoothness of the output.
 
 ```{r interpTopo}
-tmpTopo <- with(timeZero, interp(x = x, y = y, z = amplitude,xo = seq(min(x)*2, max(x)*2,length = 164), yo = seq(min(y)*2, max(y)*2, length = 164),linear = FALSE,extrap = TRUE)) 
+tmpTopo <- with(timeZero, interp(x = x, y = y, z = amplitude,xo = seq(min(x)*2, max(x)*2,length = 164), yo = seq(min(y)*2, max(y)*2, length = 100),linear = FALSE,extrap = TRUE)) 
 
 interpTopo <- data.frame(x = tmpTopo$x,tmpTopo$z)
 names(interpTopo)[1:length(tmpTopo$y)+1] <- tmpTopo$y
@@ -137,10 +138,9 @@ datmat4 %>%
 ```
 
 ```{r flatSurface}
-library(mgcv)
 spl1 <- gam(amplitude ~ s(x, y, bs = 'sos'), data = timeZero)
 # fine grid, coarser is faster
-datmat2 <- data.frame(expand.grid(x = seq(round(min(timeZero$x)),round(max(timeZero$x)), length = 100), y = seq(min(timeZero$y),max(timeZero$y), length = 100)))
+datmat2 <- data.frame(expand.grid(x = seq(min(timeZero$x)*2,max(timeZero$x)*2, length = 100), y = seq(min(timeZero$y)*2,max(timeZero$y)*2, length = 100)))
 resp <- predict(spl1, datmat2, type = "response")
 datmat2$value <- resp
 # ignore anything outside the circle
@@ -151,7 +151,7 @@ datmat2 <- datmat2[datmat2$incircle,]
 
 
 
-```{r topoplot}
+```{r topoGAM}
 ggplot(datmat2, aes(x, y, fill = value)) +
   geom_raster()+
   stat_contour(aes(z = value))+
@@ -163,13 +163,20 @@ ggplot(datmat2, aes(x, y, fill = value)) +
   coord_quickmap()
 ```
 ```{r matlabv4}
+#squeezefac <- .6559
+rmax <- .75
+gridRes <- 100
+testDat<- data.frame(x = timeZero$x,
+                     y = timeZero$y,
+                     z = timeZero$amplitude)
+xo <- seq(min(-rmax,testDat$x),max(rmax,testDat$x),length = gridRes)
+yo <- seq(max(rmax,testDat$y),min(-rmax,testDat$y),length = gridRes)
 
-v4interp <- function(x,y,z) {
-  #[x, y, v] = mergepoints2D(x,y,v);
+xo2 <- matrix(rep(xo,length(yo)),nrow = length(xo),ncol = length(yo))
+yo2 <- t(matrix(rep(yo,length(xo)),nrow = length(yo),ncol = length(xo)))
 
-xy <- x + y*sqrt(as.complex(-1))
+xy <- testDat$x + testDat$y*sqrt(as.complex(-1))
 
-# Determine distances between points
 d <- matrix(rep(xy,length(xy)),nrow = length(xy), ncol = length(xy))
   
 d <- abs(d - t(d))
@@ -179,26 +186,65 @@ diag(d) <- 1
 g <- (d^2) * (log(d)-1)   # Green's function.
 # Fixup value of Green's function along diagonal
 diag(g) <- 0
-weights <- qr.solve(g,v)
+weights <- qr.solve(g,testDat$z)
 
-#[m,n] = size(xq)
-#vq = zeros(size(xq))
-#jay = sqrt(-1)
 xy <- t(xy)
 
-# Evaluate at requested points (xq,yq).  Loop to save memory.
-for i=1:m
-  for j=1:n
-    d = abs(xq(i,j)+jay*yq(i,j) - xy);
-    mask = find(d == 0);
-    if ~isempty(mask), d(mask) = ones(length(mask),1); end
-    g = (d.^2) .* (log(d)-1);   % Green's function.
-    % Value of Green's function at zero
-    if ~isempty(mask), g(mask) = zeros(length(mask),1); end
-    vq(i,j) = g * weights;
-  end
-end
+outmat <- matrix(nrow = gridRes,ncol = gridRes)
+for (i in 1:gridRes){
+  for (j in 1:gridRes) {
+    test4 <- abs((xo2[i,j] + sqrt(as.complex(-1))*yo2[i,j]) - xy)
+    g <- (test4^2) * (log(test4)-1)
+    outmat[i,j] <- g %*% weights
+#    test4[i,j]<- test4[i,j] - xy
+  }
 }
+finalOut <- list(x = xo2[,1],y = yo2[1,],z = outmat)
+#}
+```
 
+```{r plotv4}
+interpV4 <- data.frame(x = finalOut$x,finalOut$z)
+names(interpV4)[1:length(finalOut$y)+1] <- finalOut$y
+
+interpV4 <-gather(interpV4,key = y, value = amplitude,-x,convert = TRUE) 
+interpV4$incircle <- (interpV4$x)^2 + (interpV4$y)^2 < 0.7^2 # mark
+
+datmat5 <- interpV4[interpV4$incircle,]
+datmat5 %>%
+  ggplot(aes(x = x,y= y,fill = amplitude))+
+  geom_raster(interpolate = TRUE)+
+  stat_contour(aes(z = amplitude),binwidth = 0.15)+
+  theme_topo()+
+  scale_fill_gradientn(colours = jet.colors(10),limits = c(-.73,.73),guide = "colourbar",oob = squish)+
+  scale_colour_gradientn(colours = jet.colors(10),limits = c(-.73,.73),guide = "colourbar",oob = squish)+
+  geom_point(data =timeZero,aes(x,y,colour = amplitude),size = 3)+
+  geom_path(data = circledat,aes(x,y,z = NULL,fill = NULL))+
+  coord_quickmap()
+```
+```{r spatial}
+library(sp)
+library(gstat)
+spatialdat <-testDat
+
+coordinates(spatialdat) <- ~x + y
+spatialdat
+lzn.vgm <- variogram(z~x+y, spatialdat)
+lzn.fit <- fit.variogram(lzn.vgm,model = vgm(1,"Sph"))
+plot(lzn.vgm,lzn.fit)
+
+hmm <- data.frame(xo2)
+names(hmm) <- yo2[1,]
+hmmm <- gather(hmm,x,y,convert= TRUE)
+coordinates(hmmm) <- ~x + y
+lzn.kriged <- krige(z~x+y,spatialdat,hmmm,model=lzn.fit)
+lzn.kriged %>% as.data.frame %>%
+  ggplot(aes(x=x, y=y)) + geom_tile(aes(fill=var1.pred)) + coord_equal() +
+  stat_contour(aes(z = var1.pred),binwidth = 0.15)+
+  scale_fill_gradientn(colours = jet.colors(10),limits = c(-.73,.73),guide = "colourbar",oob = squish)+
+  scale_colour_gradientn(colours = jet.colors(10),limits = c(-.73,.73),guide = "colourbar",oob = squish)+
+  geom_point(data =timeZero,aes(x,y,colour = amplitude),size = 3)+
+  scale_x_continuous(labels=comma) + scale_y_continuous(labels=comma) +
+  theme_bw()
 ```
 
