@@ -24,6 +24,7 @@ We load that in and convert it to long format - each row is now the amplitude fr
 library(tidyverse)
 library(akima)
 library(scales)
+library(mgcv)
 topotest <- read_csv("https://raw.githubusercontent.com/craddm/ExploringERPs/master/topographyTest.csv") %>%
   gather(electrode,amplitude,-Times)
 topotest$amplitude <- as.double(topotest$amplitude)
@@ -128,24 +129,27 @@ datmat4 %>%
   stat_contour(aes(z = amplitude))+
   theme_topo()+
   scale_fill_gradientn(colours = jet.colors(10),limits = c(-.73,.73),guide = "colourbar",oob = squish)+
-  #scale_colour_gradientn(colours = jet.colors(10),limits = c(-.73,.73),guide = "colourbar",oob = squish)+
-  geom_point(data =timeZero,aes(x,y,fill = amplitude),size = 3)+
+  scale_colour_gradientn(colours = jet.colors(10),limits = c(-.73,.73),guide = "colourbar",oob = squish)+
+  geom_point(data =timeZero,aes(x,y,colour = amplitude),size = 3)+
   geom_path(data = circledat,aes(x,y,z = NULL,fill = NULL))+
   coord_quickmap()
 
 ```
 
-```{r}
+```{r flatSurface}
 library(mgcv)
 spl1 <- gam(amplitude ~ s(x, y, bs = 'sos'), data = timeZero)
 # fine grid, coarser is faster
-datmat2 <- data.frame(expand.grid(x = seq(round(min(timeZero$x)),round(max(timeZero$x)), 0.02), y = seq(min(timeZero$y),max(timeZero$y), 0.01)))
+datmat2 <- data.frame(expand.grid(x = seq(round(min(timeZero$x)),round(max(timeZero$x)), length = 100), y = seq(min(timeZero$y),max(timeZero$y), length = 100)))
 resp <- predict(spl1, datmat2, type = "response")
 datmat2$value <- resp
 # ignore anything outside the circle
 datmat2$incircle <- (datmat2$x)^2 + (datmat2$y)^2 < .7^2 # mark
 datmat2 <- datmat2[datmat2$incircle,]
 ```
+
+
+
 
 ```{r topoplot}
 ggplot(datmat2, aes(x, y, fill = value)) +
@@ -158,3 +162,43 @@ ggplot(datmat2, aes(x, y, fill = value)) +
   geom_path(data = circledat,aes(x,y,z = NULL,fill = NULL))+
   coord_quickmap()
 ```
+```{r matlabv4}
+
+v4interp <- function(x,y,z) {
+  #[x, y, v] = mergepoints2D(x,y,v);
+
+xy <- x + y*sqrt(as.complex(-1))
+
+# Determine distances between points
+d <- matrix(rep(xy,length(xy)),nrow = length(xy), ncol = length(xy))
+  
+d <- abs(d - t(d))
+diag(d) <- 1
+
+# Determine weights for interpolation
+g <- (d^2) * (log(d)-1)   # Green's function.
+# Fixup value of Green's function along diagonal
+diag(g) <- 0
+weights <- qr.solve(g,v)
+
+#[m,n] = size(xq)
+#vq = zeros(size(xq))
+#jay = sqrt(-1)
+xy <- t(xy)
+
+# Evaluate at requested points (xq,yq).  Loop to save memory.
+for i=1:m
+  for j=1:n
+    d = abs(xq(i,j)+jay*yq(i,j) - xy);
+    mask = find(d == 0);
+    if ~isempty(mask), d(mask) = ones(length(mask),1); end
+    g = (d.^2) .* (log(d)-1);   % Green's function.
+    % Value of Green's function at zero
+    if ~isempty(mask), g(mask) = zeros(length(mask),1); end
+    vq(i,j) = g * weights;
+  end
+end
+}
+
+```
+
