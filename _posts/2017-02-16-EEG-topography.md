@@ -1,14 +1,14 @@
 ---
 title: "ERP Visualization: Topographies"
-output: html_document
+output: 
+  html_document:
+  code_folding: hide
 layout: post
 comments: true
 categories: [EEG, ERPs, R, ggplot2]
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
+
 
 As well as ERPs or time-frequency plots from individual channels, it's always useful to see topographical maps of our data. It's a nice way to see what's going on across the whole head, showing us whether effects are broadly or narrowly distributed across the whole scalp. So now I'm going to show you how to do topographical plots in R.
 
@@ -16,13 +16,12 @@ I want to first of all thank the **alexforrance** and **Harold Cavendish** over 
 
 Here's an example from Matlab's EEGLAB package that I'll try to reproduce. We've got a cartoon head, amplitude across the whole scalp and extrapolated slightly beyond, and a colour bar. It's using the default Matlab colormap, 'jet'.
  
-```{r, out.width = "150px",echo=FALSE}
-knitr::include_graphics("MatlabTopo.png")
-```
+<img src="/images/MatlabTopo.png" title="plot of chunk unnamed-chunk-1" alt="plot of chunk unnamed-chunk-1" width="200px" />
 
 To start off, as usual, we'll load up some test data and some useful packages. I'll be using the usual *tidyverse* packages, including *ggplot2*, and two other packages which will allow alternative approaches to producing the topographies: *akima*, and *mgcv*. I'll also later use a custom function I adapted from Matlab.
 
-```{r prepData, message = FALSE}
+
+```r
 library(tidyverse)
 library(akima)
 library(scales)
@@ -31,7 +30,7 @@ library(gridExtra)
 library(png)
 library(grid)
 
-img <- readPNG("MatlabTopo.png")
+img <- readPNG("images/MatlabTopo.png")
 gpp <- rasterGrob(img, interpolate=TRUE)
 topotest <- read_csv("https://raw.githubusercontent.com/craddm/ExploringERPs/master/topographyTest.csv") %>%
   gather(electrode,amplitude,-Times)
@@ -45,21 +44,25 @@ We load that in and convert it to long format - each row is now the amplitude fr
 
 The coordinates in EEGLAB's loc files are in polar format. What we really want are Cartesian coordinates so we can plot the familiar topographical plots we're so used to. That's easy enough to do. We just need to conver the theta values from degrees to radians, then multiply the radius values by the sine and cosine of theta respectively for our x and y values.
 
-```{r projectElecs}
+
+```r
 electrodeLocs$radianTheta <- pi/180*electrodeLocs$theta
 electrodeLocs <- electrodeLocs %>%
   mutate(x = .$radius*sin(.$radianTheta),
          y = .$radius*cos(.$radianTheta))
 polar <- ggplot(electrodeLocs,aes(radianTheta,radius,label = electrode))+geom_text()+theme_bw()+coord_fixed(ratio = 6.75)
 cartesian <- ggplot(electrodeLocs,aes(x,y,label = electrode))+geom_text()+theme_bw()+coord_quickmap()
-grid.arrange(polar,cartesian,ncol = 2)
+grid.arrange(polar,cartesian,nrow =3,widths = c(1,1),heights = c(1,0,0))
 ```
+
+![plot of chunk projectElecs](/figure/source/2017-02-16-EEG-topography/projectElecs-1.png)
 
 As you can see, the polar co-ordinates don't really plot too well, but our projected versions plot how we'd expect. Note that we could tell ggplot to interpret them as polar co-ordinates, but I found that doesn't quite plot correctly. Note that this location file also includes locations for M1 and M2 and four ocular electrodes. They'll disappear later as the data we loaded up doesn't include these electrodes.
 
 There are a couple more points of interest here. First is that I don't want all the axes or background grids, so let's create a custom theme that gets rid of the unwanted extras. In addition, I'd quite like a headshape there. We'll  make a function to draw circle, first, then one for a nose, and add it to the plot.
 
-```{r defineTheme,message = FALSE, warning=FALSE}
+
+```r
 theme_topo <- function(base_size = 12)
   {
   theme_bw(base_size = base_size) %+replace%
@@ -90,16 +93,37 @@ ggplot(circledat,aes(x,y))+
   coord_quickmap()
 ```
 
+![plot of chunk defineTheme](/figure/source/2017-02-16-EEG-topography/defineTheme-1.png)
+
 So now we've got out electrode locations mapped into 2D space, and data for all timepoints, for all electrodes. What next? Let's combine our data and electrode locations into a single data frame. To do that I call **left_join** to mash them together using electrode to match rows across the two data frames. This finds matching electrodes between the locations file and the data and combines them where possible, so, for example, the new file will have locations for all the electrodes in the data but won't have rows for M1/M2 etc., since they're not in the data. In this way you can use any location file at all that has matching electrode labels with those in your data.
 
-```{r badPlot}
+
+```r
 allData <- topotest %>% left_join(electrodeLocs, by = "electrode")
 allData
 ```
 
+```
+## # A tibble: 52,416 × 9
+##      Times electrode amplitude chanNo   theta  radius radianTheta
+##      <dbl>     <chr>     <dbl>  <int>   <dbl>   <dbl>       <dbl>
+## 1  -200.20       Fp1   0.77280      1 -17.926 0.51499  -0.3128677
+## 2  -199.22       Fp1   0.70987      1 -17.926 0.51499  -0.3128677
+## 3  -198.24       Fp1   0.65099      1 -17.926 0.51499  -0.3128677
+## 4  -197.27       Fp1   0.63708      1 -17.926 0.51499  -0.3128677
+## 5  -196.29       Fp1   0.60768      1 -17.926 0.51499  -0.3128677
+## 6  -195.31       Fp1   0.38862      1 -17.926 0.51499  -0.3128677
+## 7  -194.34       Fp1   0.26168      1 -17.926 0.51499  -0.3128677
+## 8  -193.36       Fp1   0.29348      1 -17.926 0.51499  -0.3128677
+## 9  -192.38       Fp1   0.26700      1 -17.926 0.51499  -0.3128677
+## 10 -191.41       Fp1   0.22802      1 -17.926 0.51499  -0.3128677
+## # ... with 52,406 more rows, and 2 more variables: x <dbl>, y <dbl>
+```
+
 Ok, so now we've got our head and our electrode positions, so let's pick an arbitrary timepoint and plot our topographical map! 
 
-```{r skittleFactory, warning= FALSE}
+
+```r
 jet.colors <-
   colorRampPalette(c("#00007F", "blue", "#007FFF", "cyan",
                      "#7FFF7F", "yellow", "#FF7F00", "red", "#7F0000"))
@@ -113,11 +137,14 @@ ggplot(circledat,aes(x,y))+
   theme_topo()+
   coord_quickmap()
 ```
+
+![plot of chunk skittleFactory](/figure/source/2017-02-16-EEG-topography/skittleFactory-1.png)
 It looks like somebody spilt a packet of Skittles. We missed a step! The electrodes are a sparse grid with lots of gaps in-between. To create those nice smooth maps we're so used to seeing, we need to do some interpolation!
 
 This is where *akima* comes in. **Akima** includes tools for interpolation of irregularly and regularly spaced grids using either linear or cubic splines. I'll use Akima to a do cubic spline interpolation andextrapolate beyond the confines of the data specified by the electrodes. We pass to akima the original electrode locations and the amplitude of the EEG signal measured at each electrode. Then we pass it the a grid specifying the locations we want values for. For maximum comparibility with Matlab, I'll specify a 67 by 67 grid, but you can get finer interpolation using more points. 
 
-```{r interpTopo,warning= FALSE,fig.show = 'hold'}
+
+```r
 gridRes <- 67 # Specify the number of points for each grid dimension i.e. the resolution/smoothness of the interpolation
 
 tmpTopo <- with(singleTimepoint,
@@ -172,14 +199,16 @@ matlabPlot <- qplot(1, 1, geom="blank") +
   theme_topo()+
   coord_fixed(ratio = 0.65)
 
-grid.arrange(akimaPlot,matlabPlot)
-
+akimaPlot
 ```
-On the left is the interpolation using Akima in R, on the right is the original plot from EEGLAB using Matlab's 'v4' interpolation  method. It's a little raggedy round the edges - the interpolation breaks down outside of the area covered by electrodes, seemingly quicker than does the interpolation through 'v4'. But generally it's very close to the Matlab version.
+
+![plot of chunk interpTopo](/figure/source/2017-02-16-EEG-topography/interpTopo-1.png)
+The akima interpolation is a little raggedy round the edges - the interpolation breaks down outside of the area covered by electrodes, seemingly quicker than does the interpolation through 'v4'. But generally it's very close to the Matlab version.
 
 Speaking of Matlab's v4, I decided to implement it here and see how it compares. I pretty much straight adapted the Matlab code from the griddata function. I won't pretend I know exactly what it's doing at every point.
 
-```{r matlabv4}
+
+```r
 rmax <- .75 #specify a maximum boundary for the grid
 gridRes <- 67 #specify the interpolation grid resolution
 
@@ -214,10 +243,10 @@ for (i in 1:gridRes){
   }
 }
 finalOut <- list(x = xo[,1],y = yo[1,],z = outmat)
-
 ```
 
-```{r plotv4,warning = FALSE}
+
+```r
 interpV4 <- data.frame(x = finalOut$x,finalOut$z)
 names(interpV4)[1:length(finalOut$y)+1] <- finalOut$y
 
@@ -233,37 +262,37 @@ v4plot <- ggplot(interpV4[interpV4$incircle,],aes(x = x,y= y,fill = amplitude))+
   geom_path(data = circledat,aes(x,y,z = NULL,fill = NULL))+
   coord_quickmap()
 
-grid.arrange(v4plot,matlabPlot,nrow = 1,heights = 0.1)
-
+grid.arrange(akimaPlot,v4plot,nrow = 1)
 ```
+
+![plot of chunk plotv4](/figure/source/2017-02-16-EEG-topography/plotv4-1.png)
 
 As you'd expect, using this method produces pretty much identical results here as it does in Matlab.
 
-```{r flatSurface}
-spl1 <- gam(amplitude ~ s(x, y, bs = 'sos'), data = singleTimepoint)
-# fine grid, coarser is faster
-datmat2 <- data.frame(expand.grid(x = seq(min(singleTimepoint$x)*2,max(singleTimepoint$x)*2, length = 67), y = seq(min(singleTimepoint$y)*2,max(singleTimepoint$y)*2, length = 67)))
-resp <- predict(spl1, datmat2, type = "response")
-datmat2$value <- resp
-# ignore anything outside the circle
-datmat2$incircle <- (datmat2$x)^2 + (datmat2$y)^2 < .7^2 # mark
-datmat2 <- datmat2[datmat2$incircle,]
-```
+Finally, for a really different approach to interpolation, we can fit a Generalized Additive Model (GAM). GAMs allow non-linear smooths to be used as predictors of a response. When attempting to fit the smooth, GAMs try to find a good balance between smoothness and overfitting (which would produce too "spiky" a fit). We fit a simple model which uses a smooth to predict amplitude from the x and y coordinates of the data. Then we use the model to predict amplitude values across the whole scalp.
 
 
-
-
-```{r topoGAM}
-ggplot(datmat2, aes(x, y, fill = value)) +
+```r
+splineSmooth <- gam(amplitude ~ s(x, y, bs = 'sos'), data = singleTimepoint)
+GAMtopo <- data.frame(expand.grid(x = seq(min(singleTimepoint$x)*2,
+                                          max(singleTimepoint$x)*2,
+                                          length = gridRes),
+                                  y = seq(min(singleTimepoint$y)*2,
+                                          max(singleTimepoint$y)*2,
+                                          length = gridRes)))
+GAMtopo$amplitude <-  predict(splineSmooth, GAMtopo, type = "response")
+GAMtopo$incircle <- (GAMtopo$x)^2 + (GAMtopo$y)^2 < .65^2 # mark
+ggplot(GAMtopo[GAMtopo$incircle,], aes(x, y, fill = amplitude)) +
   geom_raster()+
-  stat_contour(aes(z = value))+
+  stat_contour(aes(z = amplitude),binwidth = 0.5)+
   theme_topo()+
   scale_fill_gradientn(colours = jet.colors(10),limits = c(-2,2),guide = "colourbar",oob = squish)+
-  scale_colour_gradientn(colours = jet.colors(10),limits = c(-2,2),guide = "colourbar",oob = squish)+
-  geom_point(data =singleTimepoint,aes(x,y,colour = amplitude,fill = NULL))+
+  geom_point(data =singleTimepoint,aes(x,y,fill = NULL))+
   geom_path(data = circledat,aes(x,y,z = NULL,fill = NULL))+
   coord_quickmap()
 ```
+
+![plot of chunk GAMtopoplot](/figure/source/2017-02-16-EEG-topography/GAMtopoplot-1.png)
 
 
 

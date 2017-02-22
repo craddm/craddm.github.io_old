@@ -1,0 +1,36 @@
+---
+title: "Kriging Interpolation"
+author: "Matt Craddock"
+date: "16 February 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r spatial}
+library(sp)
+library(gstat)
+spatialdat <-testDat
+
+coordinates(spatialdat) <- ~x + y
+spatialdat
+lzn.vgm <- variogram(z~x+y, spatialdat)
+lzn.fit <- fit.variogram(lzn.vgm,model = vgm(1,"Sph"))
+plot(lzn.vgm,lzn.fit)
+
+hmm <- data.frame(xo2)
+names(hmm) <- yo2[1,]
+hmmm <- gather(hmm,x,y,convert= TRUE)
+coordinates(hmmm) <- ~x + y
+lzn.kriged <- krige(z~x+y,spatialdat,hmmm,model=lzn.fit)
+lzn.kriged %>% as.data.frame %>%
+  ggplot(aes(x=x, y=y)) + geom_raster(aes(fill=var1.pred)) + coord_equal() +
+  stat_contour(aes(z = var1.pred),binwidth = 0.3)+
+  scale_fill_gradientn(colours = jet.colors(10),limits = c(-2,2),guide = "colourbar",oob = squish)+
+  scale_colour_gradientn(colours = jet.colors(10),limits = c(-2,2),guide = "colourbar",oob = squish)+
+  geom_point(data =singleTimepoint,aes(x,y,colour = amplitude),size = 3)+
+  scale_x_continuous(labels=comma) + scale_y_continuous(labels=comma) +
+  theme_bw()
+```
