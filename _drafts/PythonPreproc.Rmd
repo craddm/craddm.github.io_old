@@ -13,6 +13,8 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(ggplot2)
 library(scales)
+library(multitaper)
+library(bspec)
 ```
 
 ```{python, engine.path = "C:\\Users\\Matt\\Anaconda3\\envs\\NewPython\\python.exe"}
@@ -31,7 +33,7 @@ montage = mne.channels.read_montage('standard_1020')
 raw.set_montage(montage)
 raw_avg_ref, _ = mne.io.set_eeg_reference(raw,None)
 #raw_avg_ref.filter(1, 40, n_jobs=2)
-raw_avg_ref.filter(1, 40)
+raw_avg_ref.filter(1, 60)
 event_id = dict(light=100, noLight=128)  # event trigger and conditions
 tmin = -0.2  # start of each epoch (200ms before the trigger)
 tmax = 0.6  # end of each epoch (500ms after the trigger)
@@ -45,6 +47,7 @@ dfRaw = epochs.to_data_frame()
 dfRaw.to_csv('C:\\Users\\Matt\\Documents\\temp\\my_epochs.csv')
 
 ```
+
 ```{r}
 newdat <- read_csv('C:\\Users\\Matt\\Documents\\temp\\my_evoked.csv')
 EEGdat <- gather(newdat,electrode,amplitude,-time)
@@ -60,18 +63,6 @@ levCat.plot <- ggplot(EEGdat,aes(time,amplitude))+
   stat_summary(fun.y= mean,geom = "line")
 ```
 
-```{r}
-# newdat2 <- read_csv('C:\\Users\\Matt\\Documents\\temp\\my_epochs.csv')
-# EEGdat2 <- gather(newdat2,electrode,amplitude,-time,-epoch,-condition)
-# 
-# theme_set(theme_bw())
-# 
-# EEGdat2 %>%
-#   ggplot(aes(time,amplitude))+
-#   stat_summary(fun.data = mean_se,geom = "line",aes(colour = condition))
-
-
-```
 ```{r}
 electrodeLocs <- read_delim("https://raw.githubusercontent.com/craddm/ExploringERPs/master/biosemi70elecs.loc", "\t", escape_double = FALSE, col_names = c("chanNo","theta","radius","electrode"), trim_ws = TRUE)
 electrodeLocs$radianTheta <- pi/180*electrodeLocs$theta
@@ -183,5 +174,25 @@ v4plot <- ggplot(interpV4[interpV4$incircle,],aes(x = x, y = y, fill = amplitude
             size = 1.5)+
   coord_equal()
 v4plot
+```
+```{r}
+yy<- EEGdat %>% filter(electrode == "Cz")
+
+yfft <- fft(yy$amplitude)
+length(yfft)
+plot(log10(abs(yfft[1:50])))
+yspec<-spectrum(yy$amplitude,demean = TRUE,log = "dB",fast = TRUE,taper = 0.1)
+yts <- ts(yy$amplitude,start = c(-.2,1),frequency = 1024)
+plot(yspec$freq[1:150],log(yspec$spec[1:150]))
+
+zz<- spec.mtm(yts)
+plot(zz$freq[1:80],log(zz$spec[1:80]),type = "l")
+
+spectrum(yts,log = "dB")
+
+gg <- welchPSD(yts,seglength = 0.8)
+ff <- empiricalSpectrum(yts)
+plot(gg$frequency[1:50],log10(gg$power[1:50]),type = "l")
+plot(ff$frequency[1:50],log10(ff$power[1:50]),type = "l")
 ```
 

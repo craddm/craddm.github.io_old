@@ -145,7 +145,7 @@ It looks like somebody spilt a packet of Skittles. We missed a step! The electro
 
 ## Interpolation
 
-This is where *akima* comes in. **Akima** includes tools for interpolation of irregularly and regularly spaced grids using either linear or cubic splines. I'll use Akima to a do cubic spline interpolation and extrapolate beyond the confines of the data specified by the electrodes, so we get the most comparable results to EEGLAB defaults. We pass to akima the original electrode locations and the amplitude of the EEG signal measured at each electrode. Then we pass it the a grid specifying the locations we want values for. For maximum comparibility with Matlab, I'll specify a 67 by 67 grid, but you can get finer interpolation using more points. 
+This is where *akima* comes in. **Akima** includes tools for interpolation of irregularly and regularly spaced grids using either linear or cubic splines. I'll use Akima to a do cubic spline interpolation and extrapolate beyond the confines of the data specified by the electrodes, so we get the most comparable results to EEGLAB defaults. We pass to akima the original electrode locations and the amplitude of the EEG signal measured at each electrode. Then we pass it the a grid specifying the locations we want values for. For maximum comparability with Matlab, I'll specify a 67 by 67 grid, but you can get finer interpolation using more points. 
 
 ```{r interpTopo,warning= FALSE,fig.height = 3,fig.width=5,fig.align='center'}
 gridRes <- 67 # Specify the number of points for each grid dimension i.e. the resolution/smoothness of the interpolation
