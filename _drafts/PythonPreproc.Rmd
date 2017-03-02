@@ -41,6 +41,10 @@ baseline = (None, 0)
 epochs = mne.Epochs(raw, events=events, event_id=event_id, tmin=tmin,
                     tmax=tmax, picks=picks, add_eeg_ref=False,preload = True)
 epochs_avg = epochs.average()
+
+epochs_avg.plot_topomap(0.171, show_names=True, colorbar=False,
+                    size=6, res=67,vmin = -5, vmax = 5, outlines = 'skirt')
+
 df = epochs_avg.to_data_frame()
 df.to_csv('C:\\Users\\Matt\\Documents\\temp\\my_evoked.csv')
 dfRaw = epochs.to_data_frame()
@@ -98,9 +102,14 @@ allData
 jet.colors <-
   colorRampPalette(c("#00007F", "blue", "#007FFF", "cyan",
                      "#7FFF7F", "yellow", "#FF7F00", "red", "#7F0000"))
+
+seismic.colors <- colorRampPalette(c("#00004C","#0000FF","#A1A1FF","white","#FFA1A1","red","#7F0000"),interpolate = "spline")
+
+matplotlibRdBu_r <- colorRampPalette(c("#053061","#4694C4","#F6F6F6","#E7886C","#67001F"),interpolate = "spline")
+
 singleTimepoint <- filter(allData,time == 170)
 rmax <- .75   #specify a maximum boundary for the grid
-gridRes <- 67 #specify the interpolation grid resolution
+gridRes <- 128 #specify the interpolation grid resolution
 
 ## Create a function to perform Matlab's v4 interpolation.
 ## Takes as input a data-frame with columns x, y, and z (x co-ordinates, y co-ordinates, and amplitude)
@@ -153,7 +162,7 @@ interpV4$incircle <- (interpV4$x)^2 + (interpV4$y)^2 < 0.7 ^ 2 # mark
 maskRing <- circleFun(diameter = 1.42) 
 v4plot <- ggplot(interpV4[interpV4$incircle,],aes(x = x, y = y, fill = amplitude))+
   geom_raster()+
-  stat_contour(aes(z = amplitude), colour = "black",binwidth = 0.6)+
+  stat_contour(aes(z = amplitude), colour = "black",binwidth = 1)+
   theme_topo()+
    geom_path(data = maskRing,
             aes(x, y, z = NULL, fill =NULL),
@@ -173,8 +182,20 @@ v4plot <- ggplot(interpV4[interpV4$incircle,],aes(x = x, y = y, fill = amplitude
             aes(x, y, z = NULL, fill = NULL),
             size = 1.5)+
   coord_equal()
-v4plot
+v4plot + scale_fill_distiller(type = "div",
+                              palette = "RdBu",
+                              #limits = c(-5,5),
+                              guide = "colourbar",
+                              oob = squish)
+
+v4plot + scale_fill_gradientn(colors = matplotlibRdBu(10),
+                              limits = c(-5,5),
+                              guide = "colourbar",
+                              oob = squish)
+
 ```
+
+
 ```{r}
 yy<- EEGdat %>% filter(electrode == "Cz")
 
