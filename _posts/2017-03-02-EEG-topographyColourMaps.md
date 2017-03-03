@@ -27,7 +27,7 @@ If you're still not convinced, even Matlab changed their default from 'jet' to '
 
 Here's the topography from the last post in all its glory:
 
-<img src="/figure/source/2017-03-02-EEG-topographyColorMaps/loadPackages-1.png" title="plot of chunk loadPackages" alt="plot of chunk loadPackages" style="display: block; margin: auto;" />
+<img src="/figure/source/2017-03-02-EEG-topographyColourMaps/loadPackages-1.png" title="plot of chunk loadPackages" alt="plot of chunk loadPackages" style="display: block; margin: auto;" />
 
 The code that defined the colour map and applied it to the topography is:
 
@@ -82,7 +82,7 @@ plasmaPlot <- v4plot + scale_fill_gradientn(colours = viridis(10, option = "C"),
 grid.arrange(viridisPlot, magmaPlot, infernoPlot, plasmaPlot, ncol = 2, nrow = 2)
 ```
 
-<img src="/figure/source/2017-03-02-EEG-topographyColorMaps/plotViridis-1.png" title="plot of chunk plotViridis" alt="plot of chunk plotViridis" style="display: block; margin: auto;" />
+<img src="/figure/source/2017-03-02-EEG-topographyColourMaps/plotViridis-1.png" title="plot of chunk plotViridis" alt="plot of chunk plotViridis" style="display: block; margin: auto;" />
 
 From a first glance, I probably like Plasma and Viridis best from these options. One thing I like about the sequential maps is that they don't place too much emphasis on any particular point, doing a good job of conveying the smoothness of the topography and not imposing any sharp transitions. These particular colour schemes would also be good for displaying raw spectral power in time-frequency plots or topographies. Raw spectral power (i.e. power which is not baseline corrected) is all-positive, so has no natural reference point such as zero to form the center of its scale.
 
@@ -115,7 +115,7 @@ PiYGPlot <- v4plot + scale_fill_distiller(type = "div",palette = "BrBG",limits =
 grid.arrange(RdBuPlot, PuOrPlot, RdYlGnPlot, PiYGPlot, ncol = 2, nrow = 2)
 ```
 
-<img src="/figure/source/2017-03-02-EEG-topographyColorMaps/diverge-1.png" title="plot of chunk diverge" alt="plot of chunk diverge" style="display: block; margin: auto;" />
+<img src="/figure/source/2017-03-02-EEG-topographyColourMaps/diverge-1.png" title="plot of chunk diverge" alt="plot of chunk diverge" style="display: block; margin: auto;" />
 
 Again, these are quite an improvement over Jet-style colour maps, and are particularly useful for showing data with a clear reference point (e.g. ERPs or baseline-corrected time-frequency plots/topographies).
 
@@ -158,7 +158,7 @@ v4plot <- ggplot(interpV4[interpV4$incircle,],aes(x = x, y = y, fill = amplitude
 v4plot
 ```
 
-<img src="/figure/source/2017-03-02-EEG-topographyColorMaps/MNEstyle-1.png" title="plot of chunk MNEstyle" alt="plot of chunk MNEstyle" style="display: block; margin: auto;" />
+<img src="/figure/source/2017-03-02-EEG-topographyColourMaps/MNEstyle-1.png" title="plot of chunk MNEstyle" alt="plot of chunk MNEstyle" style="display: block; margin: auto;" />
 
 The trick is in this code:
 
