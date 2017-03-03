@@ -17,6 +17,9 @@ library(multitaper)
 library(bspec)
 ```
 
+An issue doing EEG analysis in R at the moment is that the tools just don't exist to do a lot of the typical pre-processing steps. There are a few fledgling packages around that implement bits and pieces here and there, but nothing that takes you all the way from your raw data to nicely formatted output.
+
+
 ```{python, engine.path = "C:\\Users\\Matt\\Anaconda3\\envs\\NewPython\\python.exe"}
 import mne
 import numpy as np
