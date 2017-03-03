@@ -25,7 +25,7 @@ Some key points:
 
 If you're still not convinced, even Matlab changed their default from 'jet' to 'parula' in version 2014b, which was news to me as I am stuck with 2012b.
 
-Here's the plot from the last post in all its glory.
+Here's the topography from the last post in all its glory:
 
 <img src="/figure/source/2017-03-02-EEG-topographyColorMaps/loadPackages-1.png" title="plot of chunk loadPackages" alt="plot of chunk loadPackages" style="display: block; margin: auto;" />
 
@@ -172,5 +172,5 @@ The trick is in this code:
                )
 ```
 
-*stat_contour* creates a new data frame internally which splits the data into bins. This new dataframe has a column "level", which is the value of each bin edge. Columns can be accessed using ..[column name].., so I simply check if the level is less than 0, which sets the linetype to different numbers for bins >=0 than for bins <0.
+*stat_contour* creates a new data frame internally which splits the data into bins. This new dataframe has a column "level", which is the value of each bin edge. Columns from internally generated dataframes can be accessed using ..[column name].., so I simply check if the level is less than 0, which sets the linetype to different numbers for bins >=0 than for bins <0.
 
