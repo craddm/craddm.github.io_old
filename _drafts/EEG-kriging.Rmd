@@ -20,11 +20,11 @@ lzn.vgm <- variogram(z~x+y, spatialdat)
 lzn.fit <- fit.variogram(lzn.vgm,model = vgm(1,"Sph"))
 plot(lzn.vgm,lzn.fit)
 
-hmm <- data.frame(xo2)
-names(hmm) <- yo2[1,]
+hmm <- data.frame(x=xo,y=yo)
+names(hmm) <- yo[1,]
 hmmm <- gather(hmm,x,y,convert= TRUE)
-coordinates(hmmm) <- ~x + y
-lzn.kriged <- krige(z~x+y,spatialdat,hmmm,model=lzn.fit)
+coordinates(hmm) <- ~x + y
+lzn.kriged <- krige(z~x+y,spatialdat,hmm,model=lzn.fit)
 lzn.kriged %>% as.data.frame %>%
   ggplot(aes(x=x, y=y)) + geom_raster(aes(fill=var1.pred)) + coord_equal() +
   stat_contour(aes(z = var1.pred),binwidth = 0.3)+
