@@ -88,14 +88,14 @@ epochs_avg = epochs.average()
  #                   size=6, res=67,vmin = -5, vmax = 5, outlines = 'skirt')
 
 df = epochs_avg.to_data_frame()
-df.to_csv('C:\\Users\\Matt\\Documents\\temp\\my_evoked.csv')
+df.to_csv('C:\\Users\\Matt\\Documents\\Github\\ExploringERPs\\my_evoked.csv')
 dfRaw = epochs.to_data_frame()
-dfRaw.to_csv('C:\\Users\\Matt\\Documents\\temp\\my_epochs.csv')
+dfRaw.to_csv('C:\\Users\\Matt\\Documents\\Github\\ExploringERPs\\my_epochs.csv')
 
 ```
 
 ```{r}
-newdat <- read_csv('C:\\Users\\Matt\\Documents\\temp\\my_evoked.csv')
+newdat <- read_csv('C:\\Users\\Matt\\Documents\\Github\\ExploringERPs\\my_evoked.csv')
 EEGdat <- gather(newdat,electrode,amplitude,-time)
 
 theme_set(theme_bw())
@@ -253,7 +253,7 @@ plot(zz$freq[1:80],log(zz$spec[1:80]),type = "l")
 
 spectrum(yts,log = "dB")
 
-gg <- welchPSD(yts,seglength = 0.8)
+gg <- welchPSD(yts,seglength = .6,method = "median")
 ff <- empiricalSpectrum(yts)
 plot(gg$frequency[1:50],log10(gg$power[1:50]),type = "l")
 plot(ff$frequency[1:50],log10(ff$power[1:50]),type = "l")
