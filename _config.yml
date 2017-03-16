@@ -1,5 +1,6 @@
 #Jekyll configuration
 name: 'Matt Craddock'
+description: I am a cognitive neuroscientist and here I blog about stats and EEG
 gems: 
   - jekyll-paginate
   - jekyll-feed
@@ -15,6 +16,7 @@ permalink: /blog/:year/:month/:day/:title
 url: "https://craddm.github.io"
 baseurl: "/"
 baseurlknitr: "/"
+twitter: Matt_Craddock
 
 paginate: 5
 homepostlimit:  4
