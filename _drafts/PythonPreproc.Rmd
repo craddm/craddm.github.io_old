@@ -1,8 +1,17 @@
 ---
-title: "Python in R"
-author: "Matt Craddock"
-date: "22 February 2017"
-output: html_document
+title: 'Python in R'
+comments: yes
+layout: post
+output:
+  html_document: default
+  pdf_document: default
+  word_document: default
+categories:
+- EEG
+- ERPs
+- R
+- ggplot2
+date: "2017-02-25"
 ---
 
 ```{r setup, include=FALSE}
@@ -68,45 +77,77 @@ import pandas
 
 eogChans = (64,65,66,67)
 miscChans = (68,69,70,71)
-raw = mne.io.read_raw_edf('D:\Dropbox\EEGData\Leeds\InteroExtero\S99\Extero\S99ExteroSSDTB2.bdf',preload = True,eog = eogChans,misc = miscChans)
+raw = mne.io.read_raw_edf('D:\Dropbox\EEGData\Leeds\InteroExtero\S115\Extero\S115ExteroSSDTB2.bdf',preload = True,eog = eogChans,misc = miscChans)
 raw.info['bads'] = ['EXG7','EXG8']
 picks = mne.pick_types(raw.info, meg=False, eeg=True, eog=False, exclude='bads')
 events = mne.find_events(raw, stim_channel='STI 014')
 montage = mne.channels.read_montage('standard_1020')
 raw.set_montage(montage)
-raw_avg_ref, _ = mne.io.set_eeg_reference(raw,None)
-raw_avg_ref.filter(1, 60)
+
+#raw2 = raw
+raw.filter(1, 50)
+raw_no_ref, _ = mne.io.set_eeg_reference(raw, [])
+raw_car, _ = mne.io.set_eeg_reference(raw)
+raw_LM, _ = mne.io.set_eeg_reference(raw, ['EXG5', 'EXG6'])
+
+#raw.set_eeg_reference()
+
 event_id = dict(light=100, noLight=128)  # event trigger and conditions
 tmin = -0.2  # start of each epoch (200ms before the trigger)
 tmax = 0.6  # end of each epoch (600ms after the trigger)
 baseline = (None, 0)
-epochs = mne.Epochs(raw, events=events, event_id=event_id, tmin=tmin,
+evoked_no_ref = mne.Epochs(raw_no_ref, events=events, event_id=event_id, tmin=tmin,
                     tmax=tmax, picks=picks, add_eeg_ref=False,preload = True)
-epochs_avg = epochs.average()
+evoked_no_ref = evoked_no_ref.average()
+#epochs_avg = epochs.average()
+
+evoked_avg_ref = mne.Epochs(raw_car, events=events, event_id=event_id, tmin=tmin,
+                    tmax=tmax, picks=picks, add_eeg_ref=False,preload = True)
+evoked_avg_ref = evoked_avg_ref.average()
+evoked_LM_ref = mne.Epochs(raw_LM, events=events, event_id=event_id, tmin=tmin,
+                    tmax=tmax, picks=picks, add_eeg_ref=False,preload = True)
+                    
+evoked_LM_ref = evoked_LM_ref.average()
+#evoked_avg_ref = epochs_avg_ref.average()            
 
 #epochs_avg.plot_topomap(0.171, show_names=True, colorbar=False,
  #                   size=6, res=67,vmin = -5, vmax = 5, outlines = 'skirt')
 
-df = epochs_avg.to_data_frame()
-df.to_csv('C:\\Users\\Matt\\Documents\\Github\\ExploringERPs\\my_evoked.csv')
-dfRaw = epochs.to_data_frame()
-dfRaw.to_csv('C:\\Users\\Matt\\Documents\\Github\\ExploringERPs\\my_epochs.csv')
+df = evoked_no_ref.to_data_frame()
+df.to_csv('C:\\Users\\Matt\\Documents\\Github\\ExploringERPs\\evokedNoRef.csv')
+#dfRaw = epochs.to_data_frame()
+#dfRaw.to_csv('C:\\Users\\Matt\\Documents\\Github\\ExploringERPs\\my_epochs.csv')
+dfAvgRef = evoked_avg_ref.to_data_frame()
+dfAvgRef.to_csv('C:\\Users\\Matt\\Documents\\Github\\ExploringERPs\\evokedAvgRef.csv')
+
+dfLMRef = evoked_LM_ref.to_data_frame()
+dfLMRef.to_csv('C:\\Users\\Matt\\Documents\\Github\\ExploringERPs\\evokedLMRef.csv')
 
 ```
 
 ```{r}
-newdat <- read_csv('C:\\Users\\Matt\\Documents\\Github\\ExploringERPs\\my_evoked.csv')
+newdat <- read_csv('C:\\Users\\Matt\\Documents\\Github\\ExploringERPs\\evokedNoRef.csv')
+newdat2 <- read_csv('C:\\Users\\Matt\\Documents\\Github\\ExploringERPs\\evokedLMref.csv')
+newdat3 <- read_csv('C:\\Users\\Matt\\Documents\\Github\\ExploringERPs\\evokedAvgRef.csv')
 EEGdat <- gather(newdat,electrode,amplitude,-time)
+EEGdat2 <- gather(newdat2,electrode,amplitude,-time)
+EEGdat3 <- gather(newdat3,electrode,amplitude,-time)
 
 theme_set(theme_bw())
 
 levCat.plot <- ggplot(EEGdat,aes(time,amplitude))+
   geom_line(aes(colour = electrode))
 
-levCat.plot
+levCat2.plot <- ggplot(EEGdat2,aes(time,amplitude))+
+  geom_line(aes(colour = electrode))
+levCat3.plot <- ggplot(EEGdat3,aes(time,amplitude))+
+  geom_line(aes(colour = electrode))
 
-levCat.plot <- ggplot(EEGdat,aes(time,amplitude))+
-  stat_summary(fun.y= mean,geom = "line")
+
+levCat.plot
+levCat2.plot
+levCat3.plot
+
 ```
 
 ```{r}
@@ -137,9 +178,11 @@ circleFun <- function(center = c(0,0),diameter = 1, npoints = 100) {
 
 headShape <- circleFun(c(0, 0), round(max(electrodeLocs$x)), npoints = 100) # 0
 nose <- data.frame(x = c(-0.05,0,.05),y=c(.495,.55,.495))
-allData <- EEGdat %>% left_join(electrodeLocs, by = "electrode")
+allData <- EEGdat3 %>% left_join(electrodeLocs, by = "electrode")
 allData
 ```
+
+
 ```{r finalTopo, message = FALSE, warning = FALSE}
 jet.colors <-
   colorRampPalette(c("#00007F", "blue", "#007FFF", "cyan",
@@ -231,7 +274,7 @@ v4plot + scale_fill_distiller(type = "div",
                               oob = squish)
 
 v4plot + scale_fill_gradientn(colors = matplotlibRdBu_r(10),
-                              limits = c(-5,5),
+                              limits = c(-4,4),
                               guide = "colourbar",
                               oob = squish)
 

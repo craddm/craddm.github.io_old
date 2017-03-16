@@ -1,0 +1,58 @@
+---
+title: 'Python in R'
+comments: yes
+layout: post
+output:
+  html_document: default
+  pdf_document: default
+  word_document: default
+categories:
+- EEG
+- ERPs
+- R
+- ggplot2
+date: "2017-02-25"
+---
+
+An issue doing EEG analysis in R at the moment is that the tools just don't exist to do a lot of the typical processing steps. It's an extraordinarily complicated thing to produce working packages that cover even a few of the possible ways to analyse EEG data. The makers of tools like [EEGLAB](https://sccn.ucsd.edu/eeglab/), [Fieldtrip](http://www.fieldtriptoolbox.org/), and [MNE](http://martinos.org/mne/stable/index.html) have been doing it a long time, and not on their own. Essentially, there just isn't a big community of EEG R users to develop and support dedicated packages at the moment.
+
+This is a shame, as there are a host of statistical tools available in R that are extremely useful. For example, [lme4](https://cran.r-project.org/web/packages/lme4/index.html) is a great package for running mixed-effects models. [Brms](https://cran.r-project.org/web/packages/brms/index.html) is a great package for running all kinds of Bayesian generalized multilevel models. Some of the things offered by these tools aren't available in other common packages or software, or are only available if you have the right software versions (here's looking at you, Matlab).
+
+So what to do?
+
+There are a few fledgling packages around that implement bits and pieces, but nothing that takes you all the way from your raw data to nicely formatted output.
+
+Here's a list of existing packages that I've found:
+
+* [eegkit](https://cran.r-project.org/web/packages/eegkit/index.html)
+  + No processing or statistics
+  + Basic plotting tools - timecourses, uninterpolated topographies
+  + Not updated since 2015
+* [eegR](https://github.com/tdeenes/eegR)
+  + Github release, not available through CRAN
+  + Not updated since June 2016
+  + Data import from ASCII, Brain Voyager
+  + Permutation testing with ANOVA framework, including Threshold Free Cluster Enhancement
+  + closest to a full featured package for ERP analysis
+  + Very sparse documentation
+* [erpR](https://cran.r-project.org/web/packages/erpR/index.html)
+  + Not updated for a long time, CRAN version is also not the most up-to-date
+  + Basic plotting functions
+* [ERP](https://erpinr.org/)
+  + Import from Excel (...) possible, otherwise use standard R import tools for text
+  + Basic ERP plotting
+  + Limited statistical testing of two conditions
+
+Here are some of the features completely missing from these packages:
+* Import from raw files produced by EEG systems (e.g. Biosemi BDF, Neuroscan CNT)
+* (Time-)frequency analysis
+* Source-analysis
+* General data-preprocessing (e.g., artefact correction, filtering, epoching)
+
+I'm not writing this to critique the authors of these various packages, as they're up against mature and stable competition in other programming environments. 
+
+Some of these features are implemented in other packages that don't necessarily have anything to do with EEG. For example, R is perfecly capable of performing FFTs for frequency analysis. There is an EDF/BDF reader package (edfReader), but its performance is poor - it took over 3 minutes for it to load a *single block* of data from one participant from one of my experiments, whereas tools in other languages can load the same file in a few seconds.
+
+Currently there is no way to do the full pipeline in R itself, so you'll have to do at least some work in your other weapon of choice i.e. Python, BrainAnalyzer, or Matlab. Over the last few years I've used the [EEGLAB](https://sccn.ucsd.edu/eeglab/) and [Fieldtrip](http://www.fieldtriptoolbox.org/) packages in Matlab. They're fantastic in a lot of ways, but for some things I find them cumbersome. And getting decent figures out of Matlab drives me up the wall at the best of times. Often I'll transfer things over to R to do statistics - excepting special cases such as using non-parametric cluster-based permutation tests from Fieldtrip. 
+
+But the biggest impediment to using R for EEG analysis is simply getting the data into R in a sensible format in the first place. Obviously it can read normal text files, so .csv or tab-delimited text works.
