@@ -1,12 +1,13 @@
 /* You can customize here without going too deep. */
 
 .commentcount {
-  display: block;
-  margin-top: -0.5rem;
-  margin-bottom: 0.5rem;
+  display: inline;
+  /*margin-top: -0.5rem;
+  margin-bottom: 0.5rem;*/
   color: #9a9a9a !important; /* I'm such an amateur */
 }
 
 .likely {
   display: inline;
+  padding-bottom: 1.25rem;
 }
