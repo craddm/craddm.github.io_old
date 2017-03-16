@@ -12,13 +12,15 @@ title: Matt Craddock
       </a>
     </h1>
     
+    <div class="post-date">{{ post.date | date_to_string }} - 
     <a href="{{ post.url }}#disqus_thread" class = "commentcount"></a>
+    </div>
     
-    <span class="post-date">{{ post.date | date_to_string }} {% include social.html%} </span>
+     {% include social.html%} 
     
-
-    {{ post.content }}
-  
+    <div>
+        {{ post.content }}
+    </div>
   </div>
   {% endfor %}
 </div>
