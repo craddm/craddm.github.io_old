@@ -18,5 +18,7 @@
 
 .post-date {
   display: block;
+  margin-top: 0rem !important;
+  margin-bottom: 0rem !important;
   color: #9a9a9a;
 }
