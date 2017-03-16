@@ -6,3 +6,7 @@
   margin-bottom: 0.5rem;
   color: #9a9a9a !important; /* I'm such an amateur */
 }
+
+.likely {
+  display: inline;
+}
