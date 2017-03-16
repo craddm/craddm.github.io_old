@@ -19,7 +19,11 @@ title: Matt Craddock
       {{ post.date | date_to_string }} — <a href="{{ post.url }}#disqus_thread" class = "commentcount"></a>
     </div>
     
-    {% include social.html %}
+    <div class="likely" data-url = "{{ post.url }}" data-title = "{{ post.title }}">
+        <div class="facebook">Share</div>
+        <div class="twitter" data-via = "{{ site.twitter }}">Tweet</div>
+    </div>
+    
     
     <div class = "entry">
         {{ post.content }}
