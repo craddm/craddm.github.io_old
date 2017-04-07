@@ -22,8 +22,7 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(ggplot2)
 library(scales)
-library(multitaper)
-library(bspec)
+
 ```
 
 An issue doing EEG analysis in R at the moment is that the tools just don't exist to do a lot of the typical processing steps. It's an extraordinarily complicated thing to produce working packages that cover even a few of the possible ways to analyse EEG data. The makers of tools like [EEGLAB](https://sccn.ucsd.edu/eeglab/), [Fieldtrip](http://www.fieldtriptoolbox.org/), and [MNE](http://martinos.org/mne/stable/index.html) have been doing it a long time, and not on their own. Essentially, there just isn't a big community of EEG R users to develop and support dedicated packages at the moment.
@@ -74,64 +73,57 @@ But the biggest impediment to using R for EEG analysis is simply getting the dat
 import mne
 import numpy as np
 import pandas
+from autoreject import (LocalAutoRejectCV, compute_thresholds,
+                        set_matplotlib_defaults, plot_epochs)
+from functools import partial
+
+thresh_func = partial(compute_thresholds, method='random_search')
+ar = LocalAutoRejectCV(thresh_func=thresh_func, verbose='progressbar')
 
 eogChans = (64,65,66,67)
 miscChans = (68,69,70,71)
-raw = mne.io.read_raw_edf('D:\Dropbox\EEGData\Leeds\InteroExtero\S115\Extero\S115ExteroSSDTB2.bdf',preload = True,eog = eogChans,misc = miscChans)
-raw.info['bads'] = ['EXG7','EXG8']
-picks = mne.pick_types(raw.info, meg=False, eeg=True, eog=False, exclude='bads')
-events = mne.find_events(raw, stim_channel='STI 014')
-montage = mne.channels.read_montage('standard_1020')
-raw.set_montage(montage)
 
-#raw2 = raw
-raw.filter(1, 50)
-raw_no_ref, _ = mne.io.set_eeg_reference(raw, [])
-raw_car, _ = mne.io.set_eeg_reference(raw)
-raw_LM, _ = mne.io.set_eeg_reference(raw, ['EXG5', 'EXG6'])
+subjects = []
 
-#raw.set_eeg_reference()
+file_list = []
+for i in range(6):
+    file_list += ['F:\Dropbox\EEGData\Leeds\InteroExtero\S117\Intero\S117InteroSSDTB{0}.bdf'.format(i+1)]
 
-event_id = dict(light=100, noLight=128)  # event trigger and conditions
-tmin = -0.2  # start of each epoch (200ms before the trigger)
-tmax = 0.6  # end of each epoch (600ms after the trigger)
-baseline = (None, 0)
-evoked_no_ref = mne.Epochs(raw_no_ref, events=events, event_id=event_id, tmin=tmin,
-                    tmax=tmax, picks=picks, add_eeg_ref=False,preload = True)
-evoked_no_ref = evoked_no_ref.average()
-#epochs_avg = epochs.average()
 
-evoked_avg_ref = mne.Epochs(raw_car, events=events, event_id=event_id, tmin=tmin,
-                    tmax=tmax, picks=picks, add_eeg_ref=False,preload = True)
-evoked_avg_ref = evoked_avg_ref.average()
-evoked_LM_ref = mne.Epochs(raw_LM, events=events, event_id=event_id, tmin=tmin,
-                    tmax=tmax, picks=picks, add_eeg_ref=False,preload = True)
-                    
-evoked_LM_ref = evoked_LM_ref.average()
-#evoked_avg_ref = epochs_avg_ref.average()            
+unclean_epochs = []
+for i in range(6):
+    raw = mne.io.read_raw_edf(file_list[i],preload = True,eog = eogChans,misc = miscChans)
+    raw.info['bads'] = ['EXG7','EXG8']
+    picks = mne.pick_types(raw.info, meg=False, eeg=True, eog=False, exclude='bads')
+    events = mne.find_events(raw, stim_channel='STI 014')
+    event_id = {'light': 100, 'no light': 128}
+    tmin = -.3
+    tmax = .6
+    raw.filter(1, 45,l_trans_bandwidth = 1, h_trans_bandwidth = 5, filter_length = 'auto')
+    montage = mne.channels.read_montage('biosemi64')
+    raw.set_montage(montage)
+    raw_avg_ref, _ = mne.io.set_eeg_reference(raw)
+    epochs_avg_ref = mne.Epochs(raw_avg_ref, events=events, event_id=event_id, tmin=tmin,
+                    tmax=tmax, picks=picks, add_eeg_ref=False,preload = True, detrend = None,decim = 4)
+    unclean_epochs += [epochs_avg_ref]
 
-#epochs_avg.plot_topomap(0.171, show_names=True, colorbar=False,
- #                   size=6, res=67,vmin = -5, vmax = 5, outlines = 'skirt')
+preclean_epochs = mne.concatenate_epochs(unclean_epochs)
+epochs_ar = ar.fit_transform(preclean_epochs.copy())
 
-df = evoked_no_ref.to_data_frame()
-df.to_csv('C:\\Users\\Matt\\Documents\\Github\\ExploringERPs\\evokedNoRef.csv')
-#dfRaw = epochs.to_data_frame()
-#dfRaw.to_csv('C:\\Users\\Matt\\Documents\\Github\\ExploringERPs\\my_epochs.csv')
-dfAvgRef = evoked_avg_ref.to_data_frame()
-dfAvgRef.to_csv('C:\\Users\\Matt\\Documents\\Github\\ExploringERPs\\evokedAvgRef.csv')
-
-dfLMRef = evoked_LM_ref.to_data_frame()
-dfLMRef.to_csv('C:\\Users\\Matt\\Documents\\Github\\ExploringERPs\\evokedLMRef.csv')
+evoked_clean = epochs_ar.average()
+evoked_preclean = preclean_epochs.average()
+df = evoked_clean.to_data_frame()
+df.to_csv('C:\\Users\\Matt\\Documents\\Github\\ExploringERPs\\evoked_clean.csv')
+df = evoked_preclean.to_data_frame()
+df.to_csv('C:\\Users\\Matt\\Documents\\Github\\ExploringERPs\\evoked_preclean.csv')
 
 ```
 
 ```{r}
-newdat <- read_csv('C:\\Users\\Matt\\Documents\\Github\\ExploringERPs\\evokedNoRef.csv')
-newdat2 <- read_csv('C:\\Users\\Matt\\Documents\\Github\\ExploringERPs\\evokedLMref.csv')
-newdat3 <- read_csv('C:\\Users\\Matt\\Documents\\Github\\ExploringERPs\\evokedAvgRef.csv')
+newdat <- read_csv('C:\\Users\\Matt\\Documents\\Github\\ExploringERPs\\evoked_clean.csv')
+newdat2 <- read_csv('C:\\Users\\Matt\\Documents\\Github\\ExploringERPs\\evoked_preclean.csv')
 EEGdat <- gather(newdat,electrode,amplitude,-time)
 EEGdat2 <- gather(newdat2,electrode,amplitude,-time)
-EEGdat3 <- gather(newdat3,electrode,amplitude,-time)
 
 theme_set(theme_bw())
 
@@ -140,13 +132,11 @@ levCat.plot <- ggplot(EEGdat,aes(time,amplitude))+
 
 levCat2.plot <- ggplot(EEGdat2,aes(time,amplitude))+
   geom_line(aes(colour = electrode))
-levCat3.plot <- ggplot(EEGdat3,aes(time,amplitude))+
-  geom_line(aes(colour = electrode))
 
 
 levCat.plot
 levCat2.plot
-levCat3.plot
+
 
 ```
 
@@ -178,7 +168,7 @@ circleFun <- function(center = c(0,0),diameter = 1, npoints = 100) {
 
 headShape <- circleFun(c(0, 0), round(max(electrodeLocs$x)), npoints = 100) # 0
 nose <- data.frame(x = c(-0.05,0,.05),y=c(.495,.55,.495))
-allData <- EEGdat3 %>% left_join(electrodeLocs, by = "electrode")
+allData <- EEGdat %>% left_join(electrodeLocs, by = "electrode")
 allData
 ```
 
@@ -192,7 +182,7 @@ seismic.colors <- colorRampPalette(c("#00004C","#0000FF","#A1A1FF","white","#FFA
 
 matplotlibRdBu_r <- colorRampPalette(c("#053061","#4694C4","#F6F6F6","#E7886C","#67001F"),interpolate = "spline")
 
-singleTimepoint <- filter(allData,time == 170)
+singleTimepoint <- filter(allData,time == 172)
 rmax <- .75   #specify a maximum boundary for the grid
 gridRes <- 128 #specify the interpolation grid resolution
 
@@ -274,31 +264,7 @@ v4plot + scale_fill_distiller(type = "div",
                               oob = squish)
 
 v4plot + scale_fill_gradientn(colors = matplotlibRdBu_r(10),
-                              limits = c(-4,4),
                               guide = "colourbar",
                               oob = squish)
 
 ```
-
-
-```{r powSpec}
-yy<- EEGdat %>% filter(electrode == "Cz")
-
-yfft <- fft(yy$amplitude)
-length(yfft)
-plot(log10(abs(yfft[1:50])))
-yspec<-spectrum(yy$amplitude,demean = TRUE,log = "dB",fast = TRUE,taper = 0.1)
-yts <- ts(yy$amplitude,start = c(-.2,1),frequency = 1024)
-plot(yspec$freq[1:150],log(yspec$spec[1:150]))
-
-zz<- spec.mtm(yts)
-plot(zz$freq[1:80],log(zz$spec[1:80]),type = "l")
-
-spectrum(yts,log = "dB")
-
-gg <- welchPSD(yts,seglength = .6,method = "median")
-ff <- empiricalSpectrum(yts)
-plot(gg$frequency[1:50],log10(gg$power[1:50]),type = "l")
-plot(ff$frequency[1:50],log10(ff$power[1:50]),type = "l")
-```
-

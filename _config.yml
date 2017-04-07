@@ -1,6 +1,6 @@
 #Jekyll configuration
 name: 'Matt Craddock'
-description: I am a cognitive neuroscientist and here I blog about stats and EEG
+#description: I am a cognitive neuroscientist and I blog about stats and EEG
 gems: 
   - jekyll-paginate
   - jekyll-feed
@@ -19,16 +19,16 @@ baseurlknitr: "/"
 twitter: Matt_Craddock
 
 paginate: 5
-homepostlimit:  4
+homepostlimit: 4
 
 title: "Time-frequency transform"
-description: "Matt Craddock's blog about cognitive neuroscience and other animals"
+description: "A blog about cognitive neuroscience and other animals"
 
 comments: true
 disqus: true
 
 github:
-  repo:           https://github.com/craddm/craddm.github.io
+  repo: https://github.com/craddm/craddm.github.io
 
 #google tracking
 google_analytics: UA-84391127-1

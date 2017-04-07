@@ -1,15 +1,9 @@
 ---
-title: 'EEG analysis in R: What's missing?'
-comments: yes
+title: 'EEG analysis in R: What ''s missing?'
+output: html_document
 layout: post
-output:
-  html_document: default
-  pdf_document: default
-  word_document: default
-categories:
-- EEG
-- R
-date: "2017-04-07"
+comments: yes
+categories: [EEG,R]
 ---
 
 An issue doing EEG analysis in R at the moment is that the tools just don't exist to do a lot of the typical processing steps. It's an extraordinarily complicated thing to produce working packages that cover even a few of the possible ways to analyse EEG data. The makers of tools like [EEGLAB](https://sccn.ucsd.edu/eeglab/), [Fieldtrip](http://www.fieldtriptoolbox.org/), and [MNE](http://martinos.org/mne/stable/index.html) have been doing it a long time, and not on their own. Essentially, there just isn't a big community of EEG R users to develop and support dedicated packages at the moment.

@@ -1,0 +1,40 @@
+---
+title: "A few thoughts on CNS"
+author: "Matt Craddock"
+date: "5 April 2017"
+output: html_document
+comments: yes
+layout: post
+output:
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+A couple of weeks ago I flew over to San Francisco for the Cognitive Neuroscience Society's annual meeting. I had a great time and enjoyed it a lot. For those of you who were there and met me for the first time- hi there! - I'd also like to point out that moulting lizard is not my usual look, I just got sunburnt the day before the conference and began progressively shedding more skin over the course of the conference. Top-tip: always use sunscreen, kids.
+
+Anyway, the science and some general thoughts:
+
+The conference was well organized, in a great location. But I'll never understand the insistence on having poster sessions begin at 8am - it helps cram more in, but they're sparsely attended for the first hour or so, even with free bagels. 
+
+As per usual there were "main events" threaded throughout - award-winning speakers etc. Mostly
+
+I was a bit underwhelmed by the the Big Ideas symposium, the kinda Grand Opening event. The event was arranged as three pairs of talks on three major topics: memory, language, and learning. Only the pair in the memory topic really worked as a pair for me, as they had two contrasting opinions. The other pairs didn't really work together or play off each other. The talks themselves were all fine, but the lack of time for questions or debate about these Big Ideas meant that it just ended up like a slightly worse, longer version of a normal symposium. Perhaps if I hadn't had the impression there would be some kind of debate, I'd have been more impressed.
+
+The topics didn't feel quite as varied this time as they did last year. One wag even suggested that CNS be renamed the Oscillation Society. Now, I'm quite into my oscillations, as people who are aware of my side-job as an academic may know. But even I got bit overwhelmed with them. In part though, that's because a lot of the oscillatory work seemed to focus on speech and language, neither of which are topics I'm that interested in. There was a whole session on brain stimulation which also had work with broader implications.
+
+One speaker, David Poeppel, questioned whether the field was in a stamp-collecting phase, and attempted to bring together a bunch of findings into a single framework.
+
+Some thoughts about methods and visualization in the field. I'm trying desperately to raise my game at the moment, so part of the time I was looking purely at visuals. I recently wrote about alternative colour schemes. The vast majority of EEG posters I saw were using jet, with a few using parula, and the odd exception using red/blue (probably MNE users). It's going to take a while for new colour schemes to take off.
+
+I saw an awful lot of median splits. I'll write a separate post about why I think these are bad, but some of the examples I saw I found particularly troubling.
+
+A typical use of median splits is to split participants into two groups - e.g. high and low scores on a questionnaire measuring anxiety - or some kind of continuous variable into discrete categories - e.g. fast vs slow RTs - so that you can use an ANOVA. I think median splits are a bad idea in most circumstances - an exception being when the distribution is bimodal and thus genuinely seems to represent distinct groups, for example. It seems nice and simple to do this, but you typically end up with two groups that are hardly any different from each other, and with many datapoints that could easily end up on the other side of the split if re-tested due to measurement error. Basically it's not a reliable way to distinguish between two underlying groups.
+
+One example I found particularly problematic used a median split to segregate trials within individuals into two different categories representing two different cognitive states. They used absolute z-scored RTs to do this. The idea behind taking absolute z-scored RTs was that both short and long RTs would be distant from the mean, and thus be allocated to the "above median" state. But RT distributions are typically right-skewed. Short RTs are unlikely to be as far from the mean as long RTs, and so may often still end up in the "below the median" grouping. 
+
+The state below the median was characterized as a low variance cognitive state, while the state above the median was characterized as a high-variance cognitive state. But the trials above the median are most probably drawn from the tail of the RT distribution, and thus high-variability is as much a feature of the splitting process as it is of any underlying cognitive state.
+
+A couple of topics struck me as having an enormous amount of possible outcome variables (multiple frequency bands, questionnaires), an enormous amount of measured variables to correlate them with, and not an awful lot of apparent concern over how many researcher degrees of freedom this yields.
