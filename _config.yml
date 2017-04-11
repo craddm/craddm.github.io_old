@@ -19,7 +19,7 @@ baseurlknitr: "/"
 twitter: Matt_Craddock
 
 paginate: 5
-homepostlimit: 4
+homepostlimit: 3
 
 title: "Time-frequency transform"
 description: "A blog about cognitive neuroscience and other animals"
