@@ -22,3 +22,13 @@
   margin-bottom: 0rem !important;
   color: #9a9a9a;
 }
+
+.entry-footer{
+  font-size: 1 rem;
+  color: #000;
+  clear: both;
+}
+
+.entry-footer a{
+  border-bottom: 1px dotted #000;
+}

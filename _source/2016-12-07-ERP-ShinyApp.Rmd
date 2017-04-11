@@ -7,7 +7,7 @@ categories: [EEG, ERPs, statistics, R, ggplot2, shiny]
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE,dev = 'svg')
+knitr::opts_chunk$set(echo = TRUE,dev = 'svg') 
 ```
 
 ## Shiny app
