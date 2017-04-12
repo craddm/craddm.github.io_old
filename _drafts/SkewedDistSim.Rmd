@@ -27,7 +27,7 @@ median(simulation)
 Now we have our reference distribution. Suppose I draw 100 samples from this distribution. I can then calculate the mean and see how it compares to the population mean. And in fact I can do this over and over again to see whether there is anything systematic in how the sample means relate to the population means. To do this I'll create a custom function that takes random samples and returns the mean.
 
 ```{r}
-nSamps <- 20
+nSamps <- 30
 
 randSamp <- function (x, nSamps) {
   testMean <- sample(x,nSamps)
@@ -41,14 +41,25 @@ zz <- data.frame(meds = unlist(out[1,]),means = unlist(out[2,]))
 # qplot(unlist(out[1,]),geom = "density")
 # qplot(unlist(out[2,]),geom = "density")
 
+meanMeds <- mean(zz$meds)
+meanMeans <- mean(zz$means)
+
+
 zz %>% 
   gather(measure, value) %>%
   ggplot(aes(x = value,fill = measure))+
   geom_density(alpha = 0.3) +
   geom_vline(xintercept = mean(simulation))+
-  geom_vline(xintercept = median(simulation))
+  geom_vline(xintercept = median(simulation))+
+  geom_vline(xintercept = meanMeds, linetype = "dashed")+
+  geom_vline(xintercept = meanMeans, linetype = "dashed")
+
+  
 ```
 
+```{r}
+exp(mean(log(simulation)))
+```
 
 
 ```{r generateCorrData}
