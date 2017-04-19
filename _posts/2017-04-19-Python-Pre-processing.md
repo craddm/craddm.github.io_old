@@ -1,5 +1,5 @@
 ---
-title: 'Python in R and R in Python?'
+title: 'EEG processing with Python, but in R?'
 comments: true
 layout: post
 output:
