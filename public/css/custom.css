@@ -18,13 +18,13 @@
 
 .post-date {
   display: block;
-  margin-top: 0rem !important;
-  margin-bottom: 0rem !important;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
   color: #9a9a9a;
 }
 
 .entry-footer{
-  font-size: 1 rem;
+  font-size: 1rem;
   color: #000;
   clear: both;
 }

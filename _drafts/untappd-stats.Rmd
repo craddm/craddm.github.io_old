@@ -1,0 +1,59 @@
+---
+title: "Untappd"
+output:
+  html_document: default
+  html_notebook: default
+---
+
+```{r load_packages, echo = FALSE, message = FALSE}
+library(tidyverse)
+library(rjson)
+```
+
+```{r loadData}
+beer_check_ins <- read_csv("F:/Dropbox/BlogStuff/Untappd/checkin-report_04_16_17.csv",
+                           col_names = c("Beer","Brewery","Style","ABV","IBU","Notes","Location","Town","County_State","Country","Latitude","Longitude","Rating","Date_Time","Check_in_ID","Beer_ID","Brewery_ID","Brewery_Country","Brewery_City","Brewery_County","tags","Purchased_ Location","Serving_style")) %>%
+  filter(is.na(Rating) == FALSE)
+```
+
+```{r rating_histo}
+ggplot(beer_check_ins,aes(x = Rating))+geom_histogram(binwidth = .25)+theme_bw() 
+```
+
+```{r ABV_histo}
+ggplot(beer_check_ins,aes(x = ABV))+geom_histogram(binwidth = 0.33)+theme_bw()
+```
+```{r ABVxRating}
+ggplot(beer_check_ins,aes(x = ABV, y = Rating))+geom_count()+theme_bw()+geom_smooth(method = "loess")
+```
+```{r IBUxRating}
+beer_check_ins %>% filter(IBU > 0) %>% ggplot(aes(x = IBU, y = Rating))+geom_count()+theme_bw()+geom_smooth(method = "loess")
+```
+
+```{r country_histo}
+ggplot(beer_check_ins,aes(x = Brewery_Country))+geom_histogram(stat = "count")+coord_flip()
+```
+```{r country_ratings}
+ggplot(beer_check_ins,aes(x = Brewery_Country, y = Rating))+stat_summary()+coord_flip()
+```
+```{r style_count}
+beer_check_ins %>% separate(Style,c("Style","Subtype"),sep = "-") %>%
+  ggplot(aes(x = Style))+geom_bar(stat = "count")+coord_flip()
+```
+```{r style_ratings}
+beer_check_ins %>% separate(Style,c("Style","Subtype"),sep = "-") %>%
+  ggplot(aes(x = Style, y = Rating))+stat_summary()+coord_flip()
+```
+
+```{r style_boxplots}
+beer_check_ins %>% separate(Style,c("Style","Subtype"),sep = "-") %>%
+  ggplot(aes(x = Style, y = Rating))+geom_boxplot()+coord_flip()
+```
+
+```{r ratingXCountry}
+beer_check_ins %>% filter(Brewery_Country == "England" | Brewery_Country == "United States" | Brewery_Country == "Germany") %>% ggplot(aes(x = Rating, fill = Brewery_Country))+geom_density(alpha = 0.5)
+```
+
+```{r servexRating}
+beer_check_ins %>% filter(is.na(Serving_style) == FALSE) %>% ggplot(aes(x = Serving_style, y = Rating))+geom_violin()
+```

@@ -1,0 +1,82 @@
+---
+title: "Untappd"
+output:
+  html_document: default
+  html_notebook: default
+---
+
+```{r loadPackages, echo = FALSE, message = FALSE}
+library(tidyverse)
+```
+
+```{r loadData}
+beer_check_ins <- read_csv("F:/Dropbox/BlogStuff/Untappd/checkin-report_04_16_17.csv",
+                           col_names = c("Beer","Brewery","Style","ABV","IBU","Notes","Location","Town","County_State","Country","Latitude","Longitude","Rating","Date_Time","Check_in_ID","Beer_ID","Brewery_ID","Brewery_Country","Brewery_City","Brewery_County","tags","Purchased_ Location","Serving_style")) %>%
+  filter(is.na(Rating) == FALSE) %>%
+  separate(Date_Time,c("Date","Time"),sep = " ") %>%
+  separate(Date,c("Year","Month","Day")) %>%
+  separate(Time,"Hour",sep = ":")
+```
+
+First of all let's have a look at the overall distribution of ratings.
+
+```{r ratingHisto}
+ggplot(beer_check_ins,aes(x = Rating))+geom_histogram(binwidth = .25)+theme_classic()
+
+```
+
+The most frequent rating I give is 3.5. A noticeable feature is how ratings with .25 and .75 are less common than other ratings - that's because they were only introduced in 2015. Most of the ratings 
+```{r histoYears}
+ggplot(beer_check_ins,aes(x = Rating, fill = Year))+geom_histogram(binwidth = .25)+facet_wrap(~Year)+theme_classic()
+```
+
+```{r barByTime}
+ggplot(beer_check_ins,aes(x = Hour))+geom_bar()+theme_classic()
+```
+
+```{r ABVhisto}
+ggplot(beer_check_ins,aes(x = ABV))+geom_histogram(binwidth = 0.33)+theme_bw()
+```
+```{r ABVxRating}
+beer_check_ins %>% filter(Year >=2014) %>%
+ggplot(aes(x = Rating, y = ABV, colour = Year))+geom_count()+facet_wrap(~Year)+theme_bw()+geom_smooth(method = "loess")
+```
+```{r IBUxRating}
+beer_check_ins %>% filter(IBU > 0) %>% ggplot(aes(x = Rating, y = IBU))+geom_count()+theme_bw()+geom_smooth(method = "loess")
+beer_check_ins %>% filter(IBU > 0) %>% ggplot(aes(x = IBU, y = Rating))+geom_count()+theme_bw()+geom_smooth(method = "loess")
+
+```
+
+```{r country_histo}
+beer_check_ins %>% group_by(Brewery_Country) %>% filter(Year >=2014 & n() >3) %>%
+ggplot(aes(x = Brewery_Country))+geom_bar(stat = "count")+coord_flip()+facet_wrap(~Year)+theme_bw()
+```
+```{r country_ratings}
+library(ggbeeswarm)
+beer_check_ins %>% group_by(Brewery_Country) %>% filter(Year >=2014 & n() > 2) %>%
+ggplot(aes(x = Brewery_Country, y = Rating))+geom_beeswarm()+coord_flip()+theme_bw()
+```
+```{r style_count}
+beer_check_ins %>% separate(Style,c("Style","Subtype"),sep = "-") %>%
+  ggplot(aes(x = Style))+geom_bar(stat = "count")+coord_flip()+theme_bw()
+```
+```{r style_ratings}
+beer_check_ins %>% separate(Style,c("Style","Subtype"),sep = "-") %>%
+  ggplot(aes(x = Style, y = Rating))+geom_boxplot()+coord_flip()+theme_bw()
+```
+
+```{r ratingXCountry}
+beer_check_ins %>% group_by(Brewery_Country) %>% filter(n() > 15) %>% ggplot(aes(x = Rating, fill = Brewery_Country))+geom_density(alpha = 0.5)+theme_bw()
+```
+
+```{r servexRating}
+beer_check_ins %>% filter(is.na(Serving_style) == FALSE) %>% ggplot(aes(x = Serving_style, y = Rating))+geom_violin()+geom_boxplot(width = 0.2)
+```
+```{r}
+ggplot(beer_check_ins,aes(x = Year, y = Rating))+geom_boxplot()+theme_classic()
+
+```
+```{r}
+beer_check_ins %>% group_by(Brewery) %>% filter(n() > 5) %>%
+  ggplot(aes(x = reorder(Brewery,Rating, FUN = median), y = Rating))+geom_boxplot()+coord_flip()+ylim(0,5)
+```

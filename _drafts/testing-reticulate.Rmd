@@ -1,0 +1,38 @@
+---
+title: "Testing reticulate"
+output: html_notebook
+---
+
+
+
+```{r load_packages}
+library(reticulate)
+library(tidyverse)
+```
+
+
+```{r}
+mne <- import("mne")
+```
+
+```{r}
+Sys.which("Python")
+```
+
+```{r}
+fileName <- 'C:\\Users\\Matt\\Documents\\GitHub\\IntExtMNE\\data\\decim_epochs_S117Extero-epo.fif'
+x <- mne$read_epochs(fileName)
+
+ZZ <- data.frame(x$average()$data)
+names(ZZ) <- x$times
+ZZ$ch_names <- factor(x$ch_names)
+
+ZZZ <- gather(ZZ,timepoint,amplitude,-ch_names)
+
+
+```
+
+```{r}
+ggplot(ZZZ,aes(x = timepoint, y = amplitude*1e6))+geom_line(aes(colour = ch_names))
+```
+
