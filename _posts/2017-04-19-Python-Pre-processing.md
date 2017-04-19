@@ -1,6 +1,6 @@
 ---
-title: 'Python in R'
-comments: yes
+title: 'Python in R and R in Python?'
+comments: true
 layout: post
 output:
   html_document: default
@@ -17,17 +17,7 @@ date: "2017-04-19"
 
 
 
-As mentioned in my [last post](../blog/2017/04/07/EEG-in-R-what-is-missing/), an issue doing EEG analysis in R at the moment is that there's a distinct lack of tools in R for a lot of the typical processing steps. In the past I've done a lot of processing in Matlab (specifically with EEGLAB and Fieldtrip) and shifted things over to R for statistics. But all is not last. For example, with the following code, I can run a bunch of preprocessing, including automatic artefact rejection, and have nice ERPs in R in the blink of an eye!
-
-
-```r
-library(tidyverse)
-library(ggplot2)
-library(scales)
-library(grid)
-library(gridExtra)
-```
-
+As mentioned in my [last post](../blog/2017/04/07/EEG-in-R-what-is-missing/), an issue doing EEG analysis in R at the moment is that there's a distinct lack of tools in R for a lot of the typical processing steps. In the past I've done a lot of processing in Matlab (specifically with EEGLAB and Fieldtrip) and shifted things over to R for statistics. But all is not lost. For example, with the following code, I can run a bunch of preprocessing, including automatic artefact rejection, and have nice ERPs in R in the blink of an eye!
 
 
 ```python
@@ -80,7 +70,9 @@ df.to_csv('EXAMPLEDATA\\evoked_preclean.csv')
 
 The eagle-eyed amongst you have probably spotted something unusual about this code. No, not that it's bad. All my code is bad, there's nothing unusual about that. It's not R code. It's Python. I wrote the above code a few months ago when I was just starting out with it. It uses the [MNE](https://martinos.org/mne/stable/index.html) package to load the raw data, run [automatic artefact rejection](http://autoreject.github.io/), and save both the cleaned and unclean data as CSVs.
 
-Normally when you set up a code chunk in am R notebook, you add something like this:
+And yet, even though it's Python code, I ran it directly in an R Notebook.
+
+Normally when you set up a code chunk in an R Notebook, you add something like this (without the blocks):
 <pre>
 ```{r} 
 Add your code here.
@@ -93,8 +85,13 @@ The '{r}' can be replaced with, for example '{python}'. Knit willr then use the 
 An issue here is that it runs the code as a separate enviroment; you can't pass things from a Python chunk directly into another chunk, so you have to send it via the file system. Here I just output CSVs; you could also try out [feather](https://blog.rstudio.org/2016/03/29/feather/), which will probably be faster.
 
 
-
 ```r
+library(tidyverse)
+library(ggplot2)
+library(scales)
+library(grid)
+library(gridExtra)
+
 clean_data <- read_csv('C:\\Users\\Matt\\Documents\\Github\\ExploringERPs\\evoked_clean.csv') %>%
   gather(electrode, amplitude,-time)
 unclean_data <- read_csv('C:\\Users\\Matt\\Documents\\Github\\ExploringERPs\\evoked_preclean.csv') %>%
@@ -115,6 +112,6 @@ grid.arrange(unclean.plot,clean.plot)
 
 <img src="/figure/source/2017-04-19-Python-Pre-processing/plot_topgraphy-1.png" title="ERPs and a topography at 172 ms after stimulus onset" alt="ERPs and a topography at 172 ms after stimulus onset" style="display: block; margin: auto;" />
 
-Of course, why do this? Personally, I'm still just getting to grips with Python and MNE, and some of the analyses I want to do aren't so easy to do in Python (at least not for me, not yet). This is much a demonstration of the fact that you are not tied to using one language. You can use multiple languages in combination when you need to, even simultaneously. You can also call R code from Python using, for example, [RPy2](http://blog.yhat.com/posts/rpy2-combing-the-power-of-r-and-python.html)
+Of course, why do this? Personally, I'm still just getting to grips with Python and MNE, and some of the analyses I want to do aren't so easy to do in Python (at least not for me, not yet). This is as much a demonstration of the fact that you are not tied to using one language as anything else. You can use multiple languages in combination when you need to, even simultaneously. You can also call R code from Python using, for example, [RPy2](http://blog.yhat.com/posts/rpy2-combing-the-power-of-r-and-python.html)
 
 Another alternative to running Python in code chunks, as done here, is to use the recently released [reticulate](https://rdrr.io/cran/reticulate/man/reticulate.html) package for R, which allows you to run Python code directly within R. So you'd be able to cut out the middleman and not write to disk, as I had to above.
