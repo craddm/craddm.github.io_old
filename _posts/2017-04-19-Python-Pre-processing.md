@@ -13,6 +13,7 @@ categories:
 - ggplot2
 - Python
 date: "2017-04-19"
+image: plotCleanVsNot-1.png
 ---
 
 
@@ -93,19 +94,19 @@ library(grid)
 library(gridExtra)
 
 clean_data <- read_csv('C:\\Users\\Matt\\Documents\\Github\\ExploringERPs\\evoked_clean.csv') %>%
-  gather(electrode, amplitude,-time)
+  gather(electrode, amplitude, -time)
 unclean_data <- read_csv('C:\\Users\\Matt\\Documents\\Github\\ExploringERPs\\evoked_preclean.csv') %>%
-  gather(electrode,amplitude,-time)
+  gather(electrode, amplitude, -time)
 
 theme_set(theme_bw())
 
-unclean.plot <- ggplot(unclean_data,aes(time,amplitude))+
-  geom_line(aes(colour = electrode))+ggtitle('Before artefact rejection')+guides(colour = FALSE)
+unclean.plot <- ggplot(unclean_data, aes(time, amplitude)) +
+  geom_line(aes(colour = electrode)) + ggtitle('Before artefact rejection') + guides(colour = FALSE)
 
-clean.plot <- ggplot(clean_data,aes(time,amplitude))+
-  geom_line(aes(colour = electrode))+ggtitle('After artefact rejection')+guides(colour = FALSE)
+clean.plot <- ggplot(clean_data, aes(time, amplitude)) +
+  geom_line(aes(colour = electrode)) + ggtitle('After artefact rejection') +guides(colour = FALSE)
 
-grid.arrange(unclean.plot,clean.plot)
+grid.arrange(unclean.plot, clean.plot)
 ```
 
 <img src="/figure/source/2017-04-19-Python-Pre-processing/plotCleanVsNot-1.png" title="plot of chunk plotCleanVsNot" alt="plot of chunk plotCleanVsNot" style="display: block; margin: auto;" />
