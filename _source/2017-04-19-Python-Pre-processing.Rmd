@@ -13,7 +13,7 @@ categories:
 - ggplot2
 - Python
 date: "2017-04-19"
-image: "/plotCleanVsNot-1.png"
+image: "plotCleanVsNot-1.png"
 ---
 
 ```{r setup, include=FALSE}
