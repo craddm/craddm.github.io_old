@@ -1,6 +1,6 @@
 ---
-title: 'Python in R'
-comments: yes
+title: 'Python in R and R in Python?'
+comments: true
 layout: post
 output:
   html_document: default
