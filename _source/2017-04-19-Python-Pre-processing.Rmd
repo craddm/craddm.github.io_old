@@ -19,16 +19,7 @@ date: "2017-04-19"
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-As mentioned in my [last post](../blog/2017/04/07/EEG-in-R-what-is-missing/), an issue doing EEG analysis in R at the moment is that there's a distinct lack of tools in R for a lot of the typical processing steps. In the past I've done a lot of processing in Matlab (specifically with EEGLAB and Fieldtrip) and shifted things over to R for statistics. But all is not last. For example, with the following code, I can run a bunch of preprocessing, including automatic artefact rejection, and have nice ERPs in R in the blink of an eye!
-
-```{r loadPackages, message = FALSE, warning = FALSE}
-library(tidyverse)
-library(ggplot2)
-library(scales)
-library(grid)
-library(gridExtra)
-```
-
+As mentioned in my [last post](../blog/2017/04/07/EEG-in-R-what-is-missing/), an issue doing EEG analysis in R at the moment is that there's a distinct lack of tools in R for a lot of the typical processing steps. In the past I've done a lot of processing in Matlab (specifically with EEGLAB and Fieldtrip) and shifted things over to R for statistics. But all is not lost. For example, with the following code, I can run a bunch of preprocessing, including automatic artefact rejection, and have nice ERPs in R in the blink of an eye!
 
 ```{python, engine.path = "C:\\Users\\Matt\\Anaconda3\\envs\\NewPython\\python.exe", eval = FALSE}
 import mne
@@ -80,7 +71,7 @@ df.to_csv('EXAMPLEDATA\\evoked_preclean.csv')
 
 The eagle-eyed amongst you have probably spotted something unusual about this code. No, not that it's bad. All my code is bad, there's nothing unusual about that. It's not R code. It's Python. I wrote the above code a few months ago when I was just starting out with it. It uses the [MNE](https://martinos.org/mne/stable/index.html) package to load the raw data, run [automatic artefact rejection](http://autoreject.github.io/), and save both the cleaned and unclean data as CSVs.
 
-Normally when you set up a code chunk in am R notebook, you add something like this:
+Normally when you set up a code chunk in am R notebook, you add something like this (without the blocks):
 <pre>
 ```{r} 
 Add your code here.
@@ -92,8 +83,13 @@ The '{r}' can be replaced with, for example '{python}'. Knit willr then use the 
 
 An issue here is that it runs the code as a separate enviroment; you can't pass things from a Python chunk directly into another chunk, so you have to send it via the file system. Here I just output CSVs; you could also try out [feather](https://blog.rstudio.org/2016/03/29/feather/), which will probably be faster.
 
-
 ```{r plotCleanVsNot, warning = FALSE, message = FALSE, fig.align = "center"}
+library(tidyverse)
+library(ggplot2)
+library(scales)
+library(grid)
+library(gridExtra)
+
 clean_data <- read_csv('C:\\Users\\Matt\\Documents\\Github\\ExploringERPs\\evoked_clean.csv') %>%
   gather(electrode, amplitude,-time)
 unclean_data <- read_csv('C:\\Users\\Matt\\Documents\\Github\\ExploringERPs\\evoked_preclean.csv') %>%
