@@ -1,0 +1,57 @@
+---
+title: "global field power"
+author: "Matt Craddock"
+date: "26 April 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Quick test of global field power
+
+```{r load_packages}
+library(tidyverse)
+library(cowplot)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r load_data}
+clean_data <- read_csv('C:\\Users\\Matt\\Documents\\Github\\ExploringERPs\\epochs_clean.csv', progress = FALSE) %>% 
+  gather(electrode, amplitude, -condition, -epoch, -time)
+
+hmm <- clean_data %>%
+  group_by(time, electrode) %>%
+  summarise(amplitude = mean(amplitude)) %>%
+  group_by(time) %>%
+  mutate(GFP = sd(amplitude), GFPIQR = IQR(amplitude)) %>%
+  summarise(GFP_SD = mean(GFP), GFP_IQR = mean(GFPIQR))
+
+GFP_plot <- hmm %>% gather(measure, GFP, -time) %>% ggplot(aes(x = time, y = GFP, colour = measure))+geom_line()+theme_classic()+ scale_x_continuous(expand = c(0,0))+theme(legend.position =c(0.2,0.5))
+
+GFP_plot
+erp_plot <- clean_data %>% group_by(electrode, time) %>% summarise(amplitude = mean(amplitude)) %>% ggplot(aes(x = time, y = amplitude, colour = electrode))+geom_line()+theme_classic()+guides(colour = "none")+ scale_x_continuous(expand = c(0,0))
+
+ggsave('../_drafts/GFP_overlay.png',erp_plot + geom_line(data = hmm %>% gather(measure, GFP, -time), aes(x = time, y = GFP, linetype = measure), colour = "black", size = 1))
+
+bb<-plot_grid(erp_plot, GFP_plot, ncol = 1)
+bb
+
+save_plot('../_drafts/GFP_meas.png',bb)
+
+```
+
+```{r}
+hmm2 <- clean_data %>% group_by(time, epoch) %>% mutate(GFP = sd(amplitude)) %>% group_by(time) %>% summarise(GFP = mean(GFP))
+
+hmm3 <- clean_data %>% group_by(time, epoch) %>% mutate(GFP = IQR(amplitude)) %>% group_by(time) %>% summarise(GFP = mean(GFP))
+
+ggplot(hmm2, aes(x = time, y = GFP))+geom_line()+theme_bw()
+ggplot(hmm3, aes(x = time, y = GFP))+geom_line()+theme_bw()
+```
+
+

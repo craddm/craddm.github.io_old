@@ -23,6 +23,8 @@ Sys.which("Python")
 fileName <- 'C:\\Users\\Matt\\Documents\\GitHub\\IntExtMNE\\data\\decim_epochs_S117Extero-epo.fif'
 x <- mne$read_epochs(fileName)
 
+ZZZ <- x$plot_sensors()
+
 ZZ <- data.frame(x$average()$data)
 names(ZZ) <- x$times
 ZZ$ch_names <- factor(x$ch_names)

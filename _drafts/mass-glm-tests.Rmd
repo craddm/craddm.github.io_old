@@ -1,0 +1,41 @@
+---
+title: "Untitled"
+author: "Matt Craddock"
+date: "25 April 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+
+```{r load_packages}
+library(tidyverse)
+library(afex)
+library(broom)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r load_data}
+clean_data <- read_csv('C:\\Users\\Matt\\Documents\\Github\\ExploringERPs\\epochs_clean.csv', progress = FALSE)
+clean_data <- clean_data %>% gather(electrode,amplitude, -condition, -epoch, -time)
+```
+
+```{r}
+bb <- clean_data %>% nest(-time,-electrode) %>% mutate(fit = map(data, ~t.test(.$amplitude~.$condition)),
+                                                       p.value = map_dbl(fit,"p.value"))
+
+cc <- bb %>% select(-fit) %>% unnest()
+
+cc %>% group_by(time,condition, electrode) %>% summarise(amplitude = mean(amplitude), p = mean(p.value)) %>% ggplot(aes(x = time, y= amplitude, colour = electrode))+geom_line()+facet_wrap(~condition)
+
+cc %>% group_by(time,condition, electrode) %>% summarise(amplitude = mean(amplitude), p = mean(p.value)) %>% topoplot(time = -50)
+
+```
+

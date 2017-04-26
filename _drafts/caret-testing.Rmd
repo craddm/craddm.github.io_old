@@ -1,0 +1,82 @@
+---
+title: "caret-test"
+author: "Matt Craddock"
+date: "25 April 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+library(tidyverse)
+library(caret)
+```
+
+```{r load_data, echo=FALSE}
+clean_data <- read_csv('C:\\Users\\Matt\\Documents\\Github\\ExploringERPs\\epochs_clean.csv', progress = FALSE) %>% 
+  gather(electrode,amplitude, -condition, -epoch, -time)
+```
+
+```{r}
+classif_data <- clean_data %>% filter(time == 301) %>% select(-time)
+
+classif_data_train <- classif_data %>%
+  spread(electrode, amplitude) %>%
+  select(-epoch)
+
+training_list <- createDataPartition(classif_data_train$condition, p=.75, list = FALSE)
+training <- classif_data_train[training_list,]
+testing <- classif_data_train[-training_list,]
+
+
+fitControl <- trainControl(## 5-fold CV
+                           method = "cv",
+                           number = 5,
+                           ## repeated ten times
+                           repeats = 5)
+
+model_light <-  train(condition ~ .,
+        training,
+        preProcess = "scale",
+        method = "glm", family = "binomial",
+        trControl = fitControl)
+
+
+x_test <- testing[,2:65]
+y_test <- testing[,1]
+condition <- predict(model_light, x_test)
+
+confusionMatrix(data = condition, reference = y_test)
+
+
+z <- broom::tidy(model_light$finalModel)
+
+mod_fit_one <- glm(factor(condition) ~ ., data=training, family="binomial")
+pred_mod <- predict(mod_fit_one, newdata=testing, type="response")
+```
+
+```{r}
+z<- clean_data %>% spread(electrode,amplitude) %>% select(-epoch) %>% nest(-time) %>% mutate(fit = map(data, ~ train(condition ~ ., data = .x, preProcess = "scale", method = "glm", family = "binomial", trControl = fitControl)))
+
+ZZ <- data.frame(Accuracy = map(z$fit,"results") %>% map_dbl("Accuracy"))
+ZZ$time <- z$time
+
+ggplot(ZZ, aes(time, Accuracy))+geom_line()
+```
+
+```{r}
+penalizedLR <- clean_data %>% spread(electrode,amplitude) %>% select(-epoch) %>% nest(-time) %>% mutate(fit = map(data, ~ train(condition ~ ., data = .x, preProcess = "scale", method = "plr")))
+
+pen_LR_results <- data.frame(Accuracy = map(penalizedLR$fit,"results") %>% map("Accuracy") %>% map_dbl(~mean(.x)), time = z$time)
+
+ggplot(pen_LR_results, aes(time, Accuracy))+geom_line()
+```
+

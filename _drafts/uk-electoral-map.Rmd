@@ -1,0 +1,75 @@
+---
+title: "UK-electoral-map"
+author: "Matt Craddock"
+date: "24 April 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Playing around with electoral data.
+
+```{r load_packages}
+library(tidyverse)
+library(maptools)
+library(rgdal)
+library(ggmap)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+sh <- readOGR("F://Downloads//shapefile",layer = "westminster_const_region")
+elec_map2 <- spTransform(sh)
+CRS(sh)
+ukMap <- readOGR("F://Downloads//shapefile","Westminster_Parliamentary_Constituencies_December_2016_Full_Extent_Boundaries_in_Great_Britain")
+
+zz<- data.frame(lat = ukMap@data$lat, long = ukMap@data$lat)
+
+```
+
+```{r}
+elec_map <- tidy(sh, region = "")
+
+elec_tidy <- tidy(ukMap, region = "pcon16nm")
+uk_map <- ggplot() +
+geom_polygon(data = elec_tidy, 
+          aes(x = long, y = lat, group = group),
+          color = 'gray', fill = 'white', size = .2)+theme_minimal()
+
+```
+
+```{r}
+uk_map+coord_equal(1)
+```
+
+
+```{r}
+RESULTS <- read_csv("F:/Downloads/2015-UK-election/RESULTS.csv")
+bb <- RESULTS %>% group_by(`Constituency Name`) %>% slice(1)
+elec_tidy$`Constituency Name` <- factor(elec_tidy$id)
+zz <- bb %>% select(`Constituency Name`,Votes,`Party abbreviation`) %>% left_join(elec_tidy)
+
+```
+
+```{r}
+colour_by_winner <- ggplot() +
+geom_polygon(data = zz, 
+          aes(x = long, y = lat, group = group, fill = `Party abbreviation`),
+          color = 'gray', size = .2)+theme_minimal()
+
+party_colours <- c("Lab" = "red", "Con" = "blue", "SNP" = "yellow", "LD" = "gold", "Green" = "green4", "UKIP" = "purple", "PC" = "green")
+
+colour_by_winner+scale_fill_manual(values = party_colours, na.value = "slategrey", limits = c("Lab","Con", "SNP", "LD", "Green", "UKIP", "PC"))+coord_equal()
+
+```
+
+```{r}
+library(plotly)
+ggplotly(colour_by_winner)
+```
+

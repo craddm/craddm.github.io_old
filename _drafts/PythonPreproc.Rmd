@@ -47,10 +47,10 @@ subjects = []
 
 file_list = []
 for i in range(6):
-    file_list += ['EXAMPLEDATA{0}.bdf'.format(i+1)]
+    file_list += ['F:\Dropbox\EEGData\Leeds\InteroExtero\S117\Intero\S117InteroSSDTB{0}.bdf'.format(i+1)]
 
 unclean_epochs = []
-for file in file_list):
+for file in file_list:
     raw = mne.io.read_raw_edf(file,preload = True,eog = eogChans,misc = miscChans)
     raw.info['bads'] = ['EXG7','EXG8']
     picks = mne.pick_types(raw.info, meg=False, eeg=True, eog=False, exclude='bads')
@@ -69,12 +69,15 @@ for file in file_list):
 preclean_epochs = mne.concatenate_epochs(unclean_epochs)
 epochs_ar = ar.fit_transform(preclean_epochs.copy())
 
-evoked_clean = epochs_ar.average()
+evoked_clean = epochs_ar.copy().average()
 evoked_preclean = preclean_epochs.average()
 df = evoked_clean.to_data_frame()
-df.to_csv('EXAMPLEDATA\\evoked_clean.csv')
+df.to_csv('C:\\Users\\Matt\\Documents\\Github\\ExploringERPs\\evoked_clean.csv')
 df = evoked_preclean.to_data_frame()
-df.to_csv('EXAMPLEDATA\\evoked_preclean.csv')
+df.to_csv('C:\\Users\\Matt\\Documents\\Github\\ExploringERPs\\evoked_preclean.csv')
+df = epochs_ar.to_data_frame()
+df.to_csv('C:\\Users\\Matt\\Documents\\Github\\ExploringERPs\\epochs_clean.csv')
+
 ```
 
 The eagle-eyed amongst you have probably spotted something unusual about this code. No, not that it's bad. All my code is bad, there's nothing unusual about that. It's not R code. It's Python. I wrote the above code a few months ago when I was just starting out with it. It uses the [MNE](https://martinos.org/mne/stable/index.html) package to load the raw data, run [automatic artefact rejection](http://autoreject.github.io/), and save both the cleaned and unclean data as CSVs.
