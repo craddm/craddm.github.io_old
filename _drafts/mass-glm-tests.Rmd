@@ -28,7 +28,9 @@ clean_data <- clean_data %>% gather(electrode,amplitude, -condition, -epoch, -ti
 ```
 
 ```{r}
-bb <- clean_data %>% nest(-time,-electrode) %>% mutate(fit = map(data, ~t.test(.$amplitude~.$condition)),
+bb <- clean_data %>%
+  nest(-time,-electrode) %>%
+  mutate(fit = map(data, ~t.test(.$amplitude~.$condition)),
                                                        p.value = map_dbl(fit,"p.value"))
 
 cc <- bb %>% select(-fit) %>% unnest()

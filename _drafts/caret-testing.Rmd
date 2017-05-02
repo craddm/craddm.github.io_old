@@ -11,72 +11,125 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## R Markdown
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+Machine learning, pattern classification, whatever you want to call it: it's a big thing and it's all over the place right now. Jean-Remi King's talk in the "Big Ideas" session at CNS was all about it. MNE-Python does it. Fieldtrip does it. And now here's my attempt.
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
+```{r load_packages}
 library(tidyverse)
 library(caret)
+library(scales)
 ```
 
-```{r load_data, echo=FALSE}
-clean_data <- read_csv('C:\\Users\\Matt\\Documents\\Github\\ExploringERPs\\epochs_clean.csv', progress = FALSE) %>% 
-  gather(electrode,amplitude, -condition, -epoch, -time)
+Let's load in data produced in my previous post on using Python from R. This is data from a recent experiment with two trial types, trials with a light stimulus, and trials with no light stimulus. The actual experiment is more complicated but let's keep it simple. 
+
+```{r load_data, echo=FALSE, message = FALSE}
+#clean_data <- read_csv('C:\\Users\\Matt\\Documents\\Github\\ExploringERPs\\epochs_clean.csv', progress = FALSE) %>% 
+ # gather(electrode,amplitude, -condition, -epoch, -time)
+
+clean_data <- read_csv('C:\\Users\\Matt\\Documents\\Github\\ExploringERPs\\epochs_GAT_clean.csv', progress = FALSE) %>%
+  gather(electrode,amplitude, -condition, -epoch, -time) %>%
+  spread(electrode,amplitude) %>%
+  separate(condition, c("light","touch","report"), sep = "/")
 ```
+
+The King Kong of machine learning packages in R is *caret*. It provides an interface to over 200 different modelling functions. Here I'll be using glmnet to perform a generalized linear regression using penalized maximum likelihood. Since there are two trial-types here - light and no-light, we'll use it to do logistic regression and predict trial-type using the amplitude of each of the 64 scalp electrodes.
+
+Although most of the work I've done in previous posts requires data in *long* format, here it's better to reshape it to *wide*. This ensures whatever model you fit treats each column as a predictor - some of them will be ok with long format, some won't, but all should be fine with wide format.
+
+What we want to do is fit a model to each timepoint in our data, and see when exa
 
 ```{r}
-classif_data <- clean_data %>% filter(time == 301) %>% select(-time)
+fitControl <- trainControl(method = "cv",
+                           number = 5
+                           )
 
-classif_data_train <- classif_data %>%
-  spread(electrode, amplitude) %>%
-  select(-epoch)
+z <- clean_data %>%
+  select(-touch,-report,-epoch) %>%
+  nest(-time) %>%
+  mutate(fit = map(data, ~train(light ~ ., data = .x, preProcess = "scale",
+                                method = "glmnet", family = "binomial", trControl = fitControl)))
 
-training_list <- createDataPartition(classif_data_train$condition, p=.75, list = FALSE)
-training <- classif_data_train[training_list,]
-testing <- classif_data_train[-training_list,]
-
-
-fitControl <- trainControl(## 5-fold CV
-                           method = "cv",
-                           number = 5,
-                           ## repeated ten times
-                           repeats = 5)
-
-model_light <-  train(condition ~ .,
-        training,
-        preProcess = "scale",
-        method = "glm", family = "binomial",
-        trControl = fitControl)
-
-
-x_test <- testing[,2:65]
-y_test <- testing[,1]
-condition <- predict(model_light, x_test)
-
-confusionMatrix(data = condition, reference = y_test)
-
-
-z <- broom::tidy(model_light$finalModel)
-
-mod_fit_one <- glm(factor(condition) ~ ., data=training, family="binomial")
-pred_mod <- predict(mod_fit_one, newdata=testing, type="response")
-```
-
-```{r}
-z<- clean_data %>% spread(electrode,amplitude) %>% select(-epoch) %>% nest(-time) %>% mutate(fit = map(data, ~ train(condition ~ ., data = .x, preProcess = "scale", method = "glm", family = "binomial", trControl = fitControl)))
-
-ZZ <- data.frame(Accuracy = map(z$fit,"results") %>% map_dbl("Accuracy"))
+ZZ <- data.frame(Accuracy = map(z$fit,"resample") %>%
+                   map("Accuracy") %>%
+                   map_dbl(~mean(.x)), time = z$time)
 ZZ$time <- z$time
 
 ggplot(ZZ, aes(time, Accuracy))+geom_line()
 ```
 
+Another important test is generalization across time. We can take the model for a given timepoint and test how well it predicts class trialtype at other timepoints.
+
 ```{r}
-penalizedLR <- clean_data %>% spread(electrode,amplitude) %>% select(-epoch) %>% nest(-time) %>% mutate(fit = map(data, ~ train(condition ~ ., data = .x, preProcess = "scale", method = "plr")))
+testout <- predict(z$fit[[1]], clean_data  %>% 
+                     gather(electrode, amplitude, -light, -touch, -report, -epoch, -time) %>%
+                     group_by(electrode,time) %>%
+                     mutate(amplitude = scale(amplitude)) %>%
+                     ungroup() %>%
+                     spread(electrode,amplitude))
+test2 <- clean_data %>%
+  mutate(predacc = (unlist(testout) == light)+0) %>%
+  group_by(time) %>%
+  summarise(acc = mean(predacc))
 
-pen_LR_results <- data.frame(Accuracy = map(penalizedLR$fit,"results") %>% map("Accuracy") %>% map_dbl(~mean(.x)), time = z$time)
+ggplot(test2,aes(x = time, y = acc))+geom_line()
+```
+An oddity with geom_raster is it doesn't like irregularly spaced gaps. The EEG data used in this example was recorded at 1024 Hz and was downsampled to 256 Hz. Somewhere in the pipeline, MNE rounded time to the nearest whole number, resulting in the difference between consecutive time points mostly being 4 ms but sometimes 3 ms. To get round this here, I recreate the *real* time vector.
 
-ggplot(pen_LR_results, aes(time, Accuracy))+geom_line()
+```{r}
+out_test <- clean_data 
+
+#predict for each time point from each classifier
+uhoh <- map(z$fit, ~predict(.x,out_test, type = "prob"))
+
+true_conds <- out_test$light
+
+ruhroh <- map(uhoh, ~((unlist(.) == true_conds) +0))
+testruh <- as.data.frame(ruhroh)
+real_times <-  seq(-203.125, 500, by = 1000/128)
+#names(testruh) <- real_times
+names(testruh) <- real_times
+moreuhoh <- out_test %>% select(epoch,time,light)
+megaruhroh <- cbind(moreuhoh,testruh) %>%
+  group_by(time) %>%
+  select(-epoch,-light) %>%
+  summarise_all(mean) %>%
+  mutate(time = real_times)
+
+
+
+megaruhroh %>% 
+  gather(test_time,acc,-time) %>%
+  ggplot(aes(x = time, y = as.numeric(test_time), fill = acc)) +
+  geom_raster(interpolate = TRUE) + 
+  scale_fill_distiller(palette = "RdBu", limits = c(.25,.75), oob = squish) +
+  scale_y_continuous(expand = c(0,0))+
+  scale_x_continuous(expand = c(0,0))+
+  theme_classic()
+
+testuho <- as.data.frame(uhoh)
+names(testuho) <- unique(clean_data$time)
+
+timelist <- list(unique(clean_data$time))
+evenmoreuhoh <- cbind(moreuhoh,testuho)
+
+true_conds <- list(out_test$condition)
+
+ruhroh <- map(uhoh, ~((unlist(.) == unlist(true_conds)) +0))
+
+```
+
+Note something interesting here - the diagnoal is consistently above chance even in the baseline.
+
+```{r}
+out_folds <- createFolds(out_test$condition, k = 5)
+
+out_nest <- 
+
+uhoh <- map(z$fit, ~predict(.x,out_test))
+
+ruhroh <- map(uhoh, ~((unlist(.) == unlist(true_conds)) +0))
+testruh <- as.data.frame(ruhroh)
+real_times <-  seq(-297, 598, length.out = 230)
+names(testruh) <- real_times
+megaruhroh <- cbind(moreuhoh,testruh) %>% group_by(time) %>% select(-epoch,-condition) %>% summarise_all(mean) %>% mutate(time = real_times)
 ```
 

@@ -1,0 +1,110 @@
+---
+title: "power spectral density"
+author: "Matt Craddock"
+date: "28 April 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Power spectral density
+
+A commonly applied transformation of EEG data is the calculation of the Power Spectral Density. In brief, this is a way of turning a time-series into a representation of its spectral content 
+
+```{r load_packages}
+library(tidyverse)
+library(psd)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r load_data, echo=FALSE}
+clean_data <- read_csv('C:\\Users\\Matt\\Documents\\Github\\ExploringERPs\\epochs_GAT_clean.csv', progress = FALSE) %>%
+  gather(electrode,amplitude, -condition, -epoch, -time) 
+```
+
+```{r}
+tmp <- clean_data %>% filter(epoch == 128 & electrode == "Oz")
+
+all_psd <- clean_data %>%
+  nest(-electrode, -epoch) %>%
+  mutate(psd = map(data, ~pspectrum(.x$amplitude, 128, verbose = FALSE)))
+
+all_psd_two <- all_psd %>%
+  mutate(freqs = map(.$psd,"freq"), spec = map(.$psd, "spec"))
+
+all_psd_three <- all_psd_two %>% select(-data,-psd) %>% unnest()
+
+all_psd_three %>%
+  filter(freqs <= 40 & freqs >= 4) %>%
+  group_by(freqs,electrode) %>%
+  summarise(spec = mean(spec)) %>%
+  ggplot(aes(x = freqs, y= log(spec), colour = electrode))+geom_line()
+
+all_psd_three %>%
+  filter(freqs <= 40 & freqs >= 4) %>%
+  group_by(freqs,electrode) %>%
+  summarise(spec = mean(spec)) %>%
+  ggplot(aes(x = log(freqs), y= log(spec), colour = electrode))+geom_line()
+
+
+```
+```{r stats_spectrum}
+spec_psd <- clean_data %>%
+  nest(-electrode, -epoch) %>%
+  mutate(psd = map(data, ~spectrum(.x$amplitude, plot = FALSE)))
+
+spec_psd_two <- spec_psd %>%
+  mutate(freqs = map(.$psd,"freq"), spec = map(.$psd, "spec"))
+
+spec_psd_three <- spec_psd_two %>% select(-data,-psd) %>% unnest()
+
+spec_psd_three %>%
+  mutate(freqs = freqs*256) %>%
+  filter(freqs <= 40 & freqs >= 4) %>%
+  group_by(freqs,electrode) %>%
+  summarise(spec = mean(spec)) %>%
+  ggplot(aes(x = freqs, y= 20*log10(spec/freqs), colour = electrode))+geom_line() +theme_classic()
+
+spec_psd_three %>%
+  mutate(freqs = freqs*256) %>%
+  filter(freqs <= 40 & freqs >= 4) %>%
+  group_by(freqs,electrode) %>%
+  summarise(spec = mean(spec)) %>%
+  ggplot(aes(x = log(freqs), y= 20*log10(spec/freqs), colour = electrode))+geom_line() +theme_classic()
+
+spec_psd_three %>%
+  mutate(freqs = freqs*256) %>%
+  filter(freqs <= 40 & freqs >= 4) %>%
+  group_by(freqs,electrode) %>%
+  summarise(spec = mean(spec)) %>%
+  ggplot(aes(x = freqs, y= 20*log10(spec/freqs)))+stat_smooth(method = "loess") +theme_classic()
+
+
+```
+```{r}
+spec_psd2 <- clean_data %>%
+  nest(-electrode) %>%
+  mutate(psd = map(data, ~pspectrum(.x$amplitude, x.freqsamp = 128, plot = FALSE, niter = 0, verbose = FALSE)))
+
+spec_psd3 <- clean_data %>% nest(-time) %>% mutate(specs = map(data, ~pspectrum(.x$amplitude, x.freqsamp = 128, plot = FALSE, niter = 0, verbose = FALSE)), spec = map(specs, "spec"), freqs = map(specs,"freq"))
+
+zzz <- spec_psd3 %>% select(-specs, -data) %>% unnest()
+zzz %>% mutate(epoch = rep(1:64, each = 2912))
+```
+
+```{r}
+bb <- ggplot(test_df,aes(x = pic_id, y = values)) +
+  geom_point() +
+  geom_point(data = test_df2, aes( x= pic_id, y = values), colour = "red") +
+  scale_x_continuous(labels = test_df$pic_name, breaks = 1:10, sec.axis = dup_axis(labels = test_df2$pic_name)) +
+  theme_classic() + 
+  theme(axis.text.x = element_text(angle = 90,  colour = "red"))
+```
+
+
+

@@ -1,0 +1,57 @@
+---
+title: "Time frequency analysis"
+author: "Matt Craddock"
+date: "28 April 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r packages}
+library(tidyverse)
+library(psd)
+library(multitaper)
+```
+
+## Including Plots
+```{r}
+
+```
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+clean_data <- read_csv('C:\\Users\\Matt\\Documents\\Github\\ExploringERPs\\epochs_clean.csv', progress = FALSE) %>%
+  gather(electrode,amplitude, -condition, -epoch, -time) 
+```
+
+```{r}
+
+tmp_tf <- clean_data %>% filter(epoch == 128 & electrode == "Oz") 
+
+freqs <- list(seq(4, 30, by = 2))
+tmp_tf[seq(1,230, 4),]
+
+library(WaveletComp)
+bb <- analyze.wavelet(tmp_tf, my.series = "amplitude")
+wt.image(bb)
+```
+```{r}
+library(wavelets)
+
+freqs <- list(seq(6, 30, by = 2))
+cycles <- 4
+win_length <- (cycles/freqs[[1]])*1000
+(tmp_tf$time-(win_length[13]/2) >= min(tmp_tf$time)) & (tmp_tf$time+(win_length[13]/2) <= max(tmp_tf$time))
+
+
+```
+

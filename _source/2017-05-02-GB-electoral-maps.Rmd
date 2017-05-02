@@ -1,8 +1,11 @@
 ---
-title: "UK-electoral-map"
+title: "Maps of the 2015 election results in Great Britain"
 author: "Matt Craddock"
-date: "24 April 2017"
+date: "2 May 2017"
 output: html_document
+layout: post
+comments: true
+categories: [R, ggplot2, politics]
 ---
 
 ```{r setup, include=FALSE}
@@ -22,7 +25,7 @@ library(viridis)
 library(scales)
 ```
 
-The first step was to download a [shapefile](https://en.wikipedia.org/wiki/Shapefile) with parliamentary constituency boundaries. A shapefile is a popular vector format used in geographic information system (GIS) software. The Office of National Statistics' [Geoportal](https://geoportal.statistics.gov.uk/) provides many such maps for free. I downloaded the "Generalized Clipped Boundaries" map of Great Britain - sorry Northern Ireland, I'd have to get a separate shapefile for you and it's beyond my ability to combine them right now! I loaded it using the *rgdal* package. Essentially, the shapefile provides a set of polygons, each for a single constituency.
+The first step was to download a [shapefile](https://en.wikipedia.org/wiki/Shapefile) with parliamentary constituency boundaries. A shapefile is a popular vector format used in geographic information system (GIS) software. The Office of National Statistics' [Geoportal](https://geoportal.statistics.gov.uk/) provides many such maps for free. I downloaded the "Generalized Clipped Boundaries" map of Great Britain [^1] - sorry Northern Ireland, I'd have to get a separate shapefile for you and it's beyond my ability to combine them right now! I loaded it using the *rgdal* package. Essentially, the shapefile provides a set of polygons, each for a single constituency.
 
 ```{r load_shapefile, echo=FALSE}
 gb_map <- readOGR("F://Downloads//2015-clipped-boundaries", "Westminster_Parliamentary_Constituencies_December_2015_Generalised_Clipped_Boundaries_in_Great_Britain")
@@ -43,7 +46,7 @@ geom_polygon(data = gb_tidy,
 
 You'll notice that the x and y axes have numbers that clearly aren't longitute and latitude. These are Northings and Eastings, the grid method used by the Ordnance Survey (also called British National Grid). For some uses you'd want to convert these to another co-ordinate system, but for us it doesn't matter right now.
 
-Next I downloaded the 2015 election results from the [Electoral Commission](http://www.electoralcommission.org.uk/our-work/our-research/electoral-data). The results I'm interested in are actually spread across two different files. One contains the vote breakdown for every constituency - thus, the names of candidate, every party, and how many votes they received. The other contains, amongst other things, the total number of votes cast and the size of the electorate for each constituency.
+Next I downloaded the 2015 election results from the [Electoral Commission](http://www.electoralcommission.org.uk/our-work/our-research/electoral-data)[^2]. These are available under the [Open Government Licence v2.0](http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2/). The results I'm interested in are actually spread across two different files. One contains the vote breakdown for every constituency - thus, the names of candidate, every party, and how many votes they received. The other contains, amongst other things, the total number of votes cast and the size of the electorate for each constituency.
 
 Let's make some some maps!
 
@@ -172,3 +175,7 @@ grid.arrange(colour_by_winner, colour_by_turnout, colour_by_share, colour_by_lea
 
 
 What I'd like to do next is make these plots interactive, so that you can, for example, hover over each constituency and retrieve vote share, turnout etc. Two options for doing that are the packages **plotly**, which can turn any ggplot into an interactive plot trivially, and **leaflet**, which is specifically intended for producing interactive maps. I'll be trying that out soon.
+
+***
+[^1]: Contains OS data © Crown copyright and database right [2017]
+[^2]: Electoral Commission, 2015 UK Electoral data, accessed on 02/05/2017

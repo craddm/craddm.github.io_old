@@ -1,0 +1,54 @@
+---
+title: "leaflet map"
+author: "Matt Craddock"
+date: "1 May 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+library(tidyverse)
+library(leaflet)
+library(rgdal)
+library(broom)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+gb_map <- readOGR("F://Downloads//2015-clipped-boundaries", "Westminster_Parliamentary_Constituencies_December_2015_Generalised_Clipped_Boundaries_in_Great_Britain")
+
+head(coordinates(gb_map))
+
+```
+
+```{r}
+wgs84 <- "+init=epsg:4326"
+
+gb_wgs84 <- spTransform(gb_map, CRS(wgs84))
+
+
+```
+
+
+```{r}
+gb_tidy <- tidy(gb_wgs84,  region = "pcon15nm")
+zzz <- SpatialPoints(gb_wgs84)
+m <- leaflet() %>%
+  addTiles() %>%
+  addPolygons(gb_tidy, lng = as.numeric(gb_tidy$long), lat = as.numeric(gb_tidy$lat), group = gb_tidy$id)
+
+m
+```
+
