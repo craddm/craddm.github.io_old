@@ -67,8 +67,8 @@ winner <- group_by(results_2015, `Constituency ID`) %>%
 colour_by_winner <- ggplot(data = winner,
          aes(x = long, y = lat, group = group)) +
   geom_polygon(aes(fill = `Party abbreviation`),
-          color = NA, size = .1) +
-  geom_path(colour = "lightgrey", size = 0.01, alpha = 0.2) +
+          color = NA) +
+  geom_path(colour = "white", size = 0.01, alpha = 0.1) +
   theme_minimal() +
   scale_fill_manual(values = party_palette, na.value = "slategrey") +
   theme(panel.grid = element_blank(),
@@ -94,7 +94,7 @@ colour_by_turnout <- ggplot(data = winner,
                             aes(x = long, y = lat, group = group)) +
   geom_polygon(aes(fill = turnout_bin),
           color = NA, size = .1) +
-  geom_path(colour = "lightgrey", size = 0.01, alpha = 0.2) +
+  geom_path(colour = "white", size = 0.01, alpha = 0.1) +
   theme_minimal() +
   scale_fill_viridis(discrete = TRUE)+
   theme(panel.grid = element_blank(),
@@ -119,7 +119,7 @@ winner$share_bin <- cut(winner$`Share (%)`, breaks = c(0, 30, 40, 50, 60, 70, 80
 colour_by_share <- ggplot(data = winner, aes(x = long, y = lat, group = group)) +
   geom_polygon(aes(fill = share_bin),
           color = NA, size = .2)+
-  geom_path(colour = "lightgrey", size = 0.01, alpha = 0.2) +
+  geom_path(colour = "white", size = 0.01, alpha = 0.1) +
   coord_equal(1) +
   scale_fill_viridis(discrete = TRUE) +
   theme_minimal() +
@@ -153,7 +153,7 @@ winner_lead$Margin_bin <- cut(winner_lead$Margin, breaks = c(0,10, 20, 30, 40, 5
 
 colour_by_lead <- ggplot(data = winner_lead, aes(x = long, y = lat, group = group))+
   geom_polygon(aes(fill = Margin_bin), color = NA,  size = .2) +
-  geom_path(colour = "lightgrey", size = 0.01, alpha = 0.2) +
+  geom_path(colour = "white", size = 0.01, alpha = 0.1) +
   coord_equal(1) +
   scale_fill_viridis(discrete=TRUE) +
   theme_minimal()+
