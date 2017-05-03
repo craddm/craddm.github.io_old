@@ -93,7 +93,7 @@ winner$turnout_bin <- cut(winner$turnout, breaks = c(0, 0.5, 0.6, 0.7, 0.8,1), l
 colour_by_turnout <- ggplot(data = winner,
                             aes(x = long, y = lat, group = group)) +
   geom_polygon(aes(fill = turnout_bin),
-          color = NA, size = .1) +
+          color = NA) +
   geom_path(colour = "white", size = 0.01, alpha = 0.1) +
   theme_minimal() +
   scale_fill_viridis(discrete = TRUE)+
@@ -118,7 +118,7 @@ winner$share_bin <- cut(winner$`Share (%)`, breaks = c(0, 30, 40, 50, 60, 70, 80
 
 colour_by_share <- ggplot(data = winner, aes(x = long, y = lat, group = group)) +
   geom_polygon(aes(fill = share_bin),
-          color = NA, size = .2)+
+          color = NA)+
   geom_path(colour = "white", size = 0.01, alpha = 0.1) +
   coord_equal(1) +
   scale_fill_viridis(discrete = TRUE) +
@@ -149,10 +149,10 @@ winner_lead <- results_2015 %>%
   select(`Constituency ID`, Margin) %>%
   left_join(gb_tidy, by = c("Constituency ID" = "id"))
 
-winner_lead$Margin_bin <- cut(winner_lead$Margin, breaks = c(0,10, 20, 30, 40, 50, 100), labels = c("<10%", "10-20%", "20-30%", "30-40%", "40-50%", ">50%"))
+winner_lead$Margin_bin <- cut(winner_lead$Margin, breaks = c(0, 10, 20, 30, 40, 50, 100), labels = c("<10%", "10-20%", "20-30%", "30-40%", "40-50%", ">50%"))
 
 colour_by_lead <- ggplot(data = winner_lead, aes(x = long, y = lat, group = group))+
-  geom_polygon(aes(fill = Margin_bin), color = NA,  size = .2) +
+  geom_polygon(aes(fill = Margin_bin), color = NA) +
   geom_path(colour = "white", size = 0.01, alpha = 0.1) +
   coord_equal(1) +
   scale_fill_viridis(discrete=TRUE) +
