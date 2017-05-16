@@ -1,0 +1,69 @@
+---
+title: "Brain-to-brain synchrony"
+author: "Matt Craddock"
+date: "16 May 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# "Brain-to-brain synchrony tracks real-world dynamic group interactions in the classroom"; a post-publication peer review
+
+Dikker et al report a fascinating attempt to study brain activity during real-world social interaction. Over the course of a semester, they recorded electrical activity on the scalps of a group of high school students using portable, wireless EEG kits. This is about as far removed from a typical EEG experiment as you can get. Normally you'd sit a participant in a reasonably comfortable chair, in a shielded, low-light room, in front of a monitor. Over the course of 11 classes, the students sat through lectures, watched videos, listened to their teacher read aloud, or took part in discussions. After each class, they filled out a bunch of questionnaires on things such as the degree of engagement they felt with the task, how much they liked each other. The central hypothesis was that "synchronized neural activity across a group of students" would predict "(and possibly underpins) classroom engagement and social dynamics." Indeed, the authors report that their hypothesis was confirmed, suggesting that "brain-to-brain synchrony is a possible neural marker for dynamic social interactions, likely driven by shared attention mechanisms."
+
+It's a great effort, from a sheer logistic and technical viewpoint - getting to that classroom, recording a huge amount of data in challenging everyday surroundings without all the usual control, and turning that mass of data into something useable is to be applauded.
+
+But for me there are a number of philosophical and technical problems with the article that I find extremely hard to overlook.
+
+## What is "brain-to-brain synchrony" and how is it measured?
+
+Central to the article is the concept of "brain-to-brain synchrony". What exactly is that? Synchrony is multiple things happening at the same time. Thus, a simple definition of brain-to-brain synchrony is two (or more) brains doing roughly the same thing at roughly the same time. How is that measured?
+
+Total interdependence. In brief, magnitude squared coherence using Welch's method is calculated between pairs of electrodes on pairs of subjects' heads. So, for example, the coherence between O1 on S1 and O1 on S2 is calculated at each frequency from 1 to 20 Hz in .25 Hz steps. Total interdependence is some variation on the sum/average of those coherences. TI is then averaged across each electrode pair. Student-to-group TI was calculated by averaging TI across all possible pairwise combinations between each student and each other student. Thus, for each student, there was student-to-student TI for each possible pairing of students, and student-to-group TI.
+
+
+
+Calling it "brain-to-brain" implies that the brains are synchronizing to each other. It is hard to see how that can be the case.
+
+
+
+Considering the students are all sitting in the same room doing the same thing, a certain level of synchrony in their brain activity is to be expected. Indeed, one might expect a certain degree of synchrony even if they were all sitting in separate rooms doing the same thing. 
+
+
+Indeed there is no demonstration that it is necessary for the students to be engaged in an acitivity as a group for "brain-to-brain" synchrony to be measurable.
+
+
+A question the paper does not try to answer might be to what degree is brain-to-brain synchrony higher when participating in a task in a group compared to the same participants 
+
+
+
+There is no motivation of the 
+
+
+
+
+Both TI and alpha band coherence were normalized using a min-max transformation. However, it's not clear what was the min and what was the max. Was it the Within student pairs? within student-to-group? For example, if the normalization was done for each student pair, then 0 and 1 could have different underlying values between each pair. On the other hand, min could be the minimum TI between a student and any other student in the group. In addition: why normalize at all?
+
+The level of statistical reporting in the paper is remarkably poor. 
+
+One outcome measure is "Group Affinity". There is no explanation of how this is measured. In the main text of an artilce, an article is cited that does after one mention of "Group Affinity" that does not mention Group Affinity.
+
+Two-way repeated measures ANOvA were conducted with teaching style and day of recording as factors. These factors have 4 and 11 levels respectively. It's highly likely that with so many levels, the assumption of sphericity is violated and Greenhouse-Geisser or some other correction would be appropriate, but this does not seem to have been checked. Main effects of teaching style are reported, but neither the main effect of time nor the interaction between time and teaching style are reported. The main effect of teaching style is interpreted but no post-hoc tests are repeated to identify where significant differences between teaching style lie.
+
+The description of the multilevel models lacks clear specification. The authors state that all random effects were modeled wherever possible, but it's not clear what that actually means. Was this an intercept only model or were random slopes included? This is important because intercept-only models have inflated type 1 error rates. The rationale for collapsing the teaching styles to two levels also seems unclear. Although other tests found no difference between some of the levels, there is nevertheless little in common between them. Thus, this variable no longer reflects teaching style but something more akin to task engagement level. 
+
+The four teaching styles are given as "teacher reads aloud", "video", "teacher lectures", "group discussion".
+
+It's not at all clear why some tests are conducted on group TI and some on student-to-group TI.
+
+
+## What is brain-to-brain synchrony?
+
+No idea. 
+
+Suppose we were studying synchronized swimming, and were looking for predictors of the judges' ratings. We could measure the degree of synchrony between the swimmers' limbs. For example, we could quantify leg-to-leg synchrony. 
+
+
+
