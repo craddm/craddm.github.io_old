@@ -13,19 +13,19 @@ knitr::opts_chunk$set(echo = TRUE)
 
 Dikker et al report a fascinating attempt to study brain activity during real-world social interaction. Over the course of a semester, they recorded electrical activity on the scalps of a group of high school students using portable, wireless EEG kits. This is about as far removed from a typical EEG experiment as you can get. Normally you'd sit a participant in a reasonably comfortable chair, in a shielded, low-light room, in front of a monitor. Over the course of 11 classes, the students sat through lectures, watched videos, listened to their teacher read aloud, or took part in discussions. After each class, they filled out a bunch of questionnaires on things such as the degree of engagement they felt with the task, how much they liked each other. The central hypothesis was that "synchronized neural activity across a group of students" would predict "(and possibly underpins) classroom engagement and social dynamics." Indeed, the authors report that their hypothesis was confirmed, suggesting that "brain-to-brain synchrony is a possible neural marker for dynamic social interactions, likely driven by shared attention mechanisms."
 
-It's a great effort, from a sheer logistic and technical viewpoint - getting to that classroom, recording a huge amount of data in challenging everyday surroundings without all the usual control, and turning that mass of data into something useable is to be applauded.
+It's a great effort from a sheer logistic and technical viewpoint - getting to that classroom, recording a huge amount of data in challenging everyday surroundings without all the usual control, and turning that mass of data into something useable is to be applauded.
 
 But for me there are a number of philosophical and technical problems with the article that I find extremely hard to overlook.
 
 ## What is "brain-to-brain synchrony" and how is it measured?
 
-Central to the article is the concept of "brain-to-brain synchrony". What exactly is that? Synchrony is multiple things happening at the same time. Thus, a simple definition of brain-to-brain synchrony is two (or more) brains doing roughly the same thing at roughly the same time. How is that measured?
+Central to the article is the concept of "brain-to-brain synchrony". What exactly is that? Synchrony is multiple things happening at the same time. Thus, a simple definition of brain-to-brain synchrony is two (or more) brains doing roughly the same thing at roughly the same time. Note that there is no requirement here that brains synchronize to each other directly, and indeed it's hard to imagine any plausible mechanism by which they could. It must always be indirect, be that through action (e.g. speech or motion) or through attention to the same thing (e.g. a video). It might be more accurately called "brain-to-something-to-brain" synchrony: brain-to-speech-to-brain; brain-to-video-to-brain. And of course there is no requirement of transfer: in some of those circumstances it might be more accurately called "brains-to-video" or "brains-to-speech", because there is no transfer from one brain to another. Indeed, I can't see any meaningful way in which the oscillatory state of one brain can be communicated to another.
 
-Total interdependence. In brief, magnitude squared coherence using Welch's method is calculated between pairs of electrodes on pairs of subjects' heads. So, for example, the coherence between O1 on S1 and O1 on S2 is calculated at each frequency from 1 to 20 Hz in .25 Hz steps. Total interdependence is some variation on the sum/average of those coherences. TI is then averaged across each electrode pair. Student-to-group TI was calculated by averaging TI across all possible pairwise combinations between each student and each other student. Thus, for each student, there was student-to-student TI for each possible pairing of students, and student-to-group TI.
+So how is "brain-to-brain" synchrony measured? 
+
+Total interdependence. In brief, magnitude squared coherence between pairs of electrodes on pairs of subjects' heads is calculated using Welch's method. So, for example, the coherence between electrode O1 on subject 1 and O1 on subject 2 is calculated, at each frequency from 1 to 20 Hz, in .25 Hz steps. Total interdependence is some variation on the sum/average of those coherences. TI is then averaged across each electrode pair. Student-to-group TI was calculated by averaging TI across all possible pairwise combinations between each student and each other student. Thus, for each student, there was student-to-student TI for each possible pairing of students, and student-to-group TI.
 
 
-
-Calling it "brain-to-brain" implies that the brains are synchronizing to each other. It is hard to see how that can be the case.
 
 
 
