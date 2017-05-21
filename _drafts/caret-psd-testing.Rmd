@@ -25,14 +25,13 @@ Let's load in data produced in my previous post on using Python from R. This is 
 #clean_data <- read_csv('C:\\Users\\Matt\\Documents\\Github\\ExploringERPs\\epochs_clean.csv', progress = FALSE) %>% 
  # gather(electrode,amplitude, -condition, -epoch, -time)
 
-clean_data <- read_csv('F:\\Dropbox\\BlogStuff\\EEG_data\\epochs_GAT_clean.csv', progress = FALSE) %>%
+clean_data <- read_csv('C:\\Users\\Matt\\Dropbox\\BlogStuff\\EEG_data\\epochs_GAT_clean.csv', progress = FALSE) %>%
   gather(electrode,amplitude, -condition, -epoch, -time) %>%
   spread(electrode,amplitude) %>%
   separate(condition, c("light","touch","report"), sep = "/")
 
 epoch_list <- select(clean_data, epoch, report)
-
-all_psd_three %>% spread(electrode, spec) %>% left_join(epoch_list, by = "epoch")
+table(epoch_list$report)
 
 
 ```
@@ -46,7 +45,8 @@ What we want to do is fit a model to each timepoint in our data, and see when ex
 ```{r}
 fitControl <- trainControl(method = "cv",
                            number = 5,
-                           sampling = "down"
+                           classProbs = TRUE,
+                           summaryFunction = twoClassSummary
                            )
 
 z <- all_psd_three %>%

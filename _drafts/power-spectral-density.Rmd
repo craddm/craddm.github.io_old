@@ -23,13 +23,11 @@ library(psd)
 You can also embed plots, for example:
 
 ```{r load_data, echo=FALSE}
-clean_data <- read_csv('C:\\Users\\Matt\\Documents\\Github\\ExploringERPs\\epochs_GAT_clean.csv', progress = FALSE) %>%
+clean_data <- read_csv('C:\\Users\\Matt\\Dropbox\\BlogStuff\\EEG_data\\epochs_GAT_clean.csv', progress = FALSE) %>%
   gather(electrode,amplitude, -condition, -epoch, -time) 
 ```
 
 ```{r}
-tmp <- clean_data %>% filter(epoch == 128 & electrode == "Oz")
-
 all_psd <- clean_data %>%
   nest(-electrode, -epoch) %>%
   mutate(psd = map(data, ~pspectrum(.x$amplitude, 128, verbose = FALSE)))
@@ -53,6 +51,7 @@ all_psd_three %>%
 
 
 ```
+
 ```{r stats_spectrum}
 spec_psd <- clean_data %>%
   nest(-electrode, -epoch) %>%
@@ -68,7 +67,7 @@ spec_psd_three %>%
   filter(freqs <= 40 & freqs >= 4) %>%
   group_by(freqs,electrode) %>%
   summarise(spec = mean(spec)) %>%
-  ggplot(aes(x = freqs, y= 20*log10(spec/freqs), colour = electrode))+geom_line() +theme_classic()
+  ggplot(aes(x = freqs, y= 10*log10(spec), colour = electrode))+geom_line() +theme_classic()
 
 spec_psd_three %>%
   mutate(freqs = freqs*256) %>%
