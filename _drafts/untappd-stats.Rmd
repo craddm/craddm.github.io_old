@@ -7,11 +7,11 @@ output:
 
 ```{r load_packages, echo = FALSE, message = FALSE}
 library(tidyverse)
-library(rjson)
+
 ```
 
 ```{r loadData}
-beer_check_ins <- read_csv("F:/Dropbox/BlogStuff/Untappd/checkin-report_04_16_17.csv",
+beer_check_ins <- read_csv("C:/Users/Matt/Dropbox/BlogStuff/Untappd/checkin-report_05_13_17.csv",
                            col_names = c("Beer","Brewery","Style","ABV","IBU","Notes","Location","Town","County_State","Country","Latitude","Longitude","Rating","Date_Time","Check_in_ID","Beer_ID","Brewery_ID","Brewery_Country","Brewery_City","Brewery_County","tags","Purchased_ Location","Serving_style")) %>%
   filter(is.na(Rating) == FALSE)
 ```
@@ -19,6 +19,8 @@ beer_check_ins <- read_csv("F:/Dropbox/BlogStuff/Untappd/checkin-report_04_16_17
 ```{r rating_histo}
 ggplot(beer_check_ins,aes(x = Rating))+geom_histogram(binwidth = .25)+theme_bw() 
 ```
+
+There's a clear skew in my ratings, with the modal rating being 3.5. I haven't been calibrating my ratings to have 2.5 be my average rating. There's a couple of things going on here. One is that my choice of beers is not random. I tend to pick styles I know I'm likely to like from breweries I know I'm likely to like. Thus, most of the beers I drink are above what I would put as the "global" average of 2.5. The thought process in my ratings is that I'm not rating them relative to all the other beers I drink as much as I'm rating them against all the beers I could possibly drink. So most beers I choose to drink end up being above 2.5 because they're better than the mid-point of beers.
 
 ```{r ABV_histo}
 ggplot(beer_check_ins,aes(x = ABV))+geom_histogram(binwidth = 0.33)+theme_bw()
@@ -36,10 +38,12 @@ ggplot(beer_check_ins,aes(x = Brewery_Country))+geom_histogram(stat = "count")+c
 ```{r country_ratings}
 ggplot(beer_check_ins,aes(x = Brewery_Country, y = Rating))+stat_summary()+coord_flip()
 ```
+
 ```{r style_count}
 beer_check_ins %>% separate(Style,c("Style","Subtype"),sep = "-") %>%
   ggplot(aes(x = Style))+geom_bar(stat = "count")+coord_flip()
 ```
+
 ```{r style_ratings}
 beer_check_ins %>% separate(Style,c("Style","Subtype"),sep = "-") %>%
   ggplot(aes(x = Style, y = Rating))+stat_summary()+coord_flip()
@@ -55,5 +59,5 @@ beer_check_ins %>% filter(Brewery_Country == "England" | Brewery_Country == "Uni
 ```
 
 ```{r servexRating}
-beer_check_ins %>% filter(is.na(Serving_style) == FALSE) %>% ggplot(aes(x = Serving_style, y = Rating))+geom_violin()
+beer_check_ins %>% filter(is.na(Serving_style) == FALSE) %>% ggplot(aes(x = Serving_style, y = Rating))+geom_jitter()
 ```

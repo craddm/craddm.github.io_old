@@ -25,7 +25,7 @@ Let's load in data produced in my previous post on using Python from R. This is 
 #clean_data <- read_csv('C:\\Users\\Matt\\Documents\\Github\\ExploringERPs\\epochs_clean.csv', progress = FALSE) %>% 
  # gather(electrode,amplitude, -condition, -epoch, -time)
 
-clean_data <- read_csv('C:\\Users\\Matt\\Documents\\Github\\ExploringERPs\\epochs_GAT_clean.csv', progress = FALSE) %>%
+clean_data <- read_csv('C:\\Users\\Matt\\Dropbox\\BlogStuff\\EEG_data\\epochs_GAT_clean.csv', progress = FALSE) %>%
   gather(electrode,amplitude, -condition, -epoch, -time) %>%
   spread(electrode,amplitude) %>%
   separate(condition, c("light","touch","report"), sep = "/")
