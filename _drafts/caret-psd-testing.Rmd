@@ -58,8 +58,8 @@ z <- all_psd_three %>%
                                 method = "glmnet", family = "binomial", trControl = fitControl)))
 
 ZZ <- data.frame(Accuracy = map(z$fit,"resample") %>%
-                   map("Accuracy") %>%
-                   map_dbl(~mean(.x)), time = z$freqs)
+                   map("ROC") %>%
+                   map_dbl(~mean(.x)), freqs = z$freqs)
 ZZ$freqs <- z$freqs
 
 ggplot(ZZ, aes(freqs, Accuracy))+geom_line()
