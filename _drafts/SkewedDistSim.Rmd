@@ -99,7 +99,7 @@ exp(mean(log(simulation)))
 
 ```{r generateCorrData}
 nSubs <- 1
-nTrials <- 100000
+n_trials <- 1000
 
 myCop<- normalCopula(param=0.5, dim = 2)
 myMvd <- mvdc(copula=myCop, margins=c("gamma", "gamma"),
@@ -114,3 +114,27 @@ MVNdata <- bind_rows(lapply(MVNdata, data.frame, stringsAsFactors = FALSE)) %>%
 
 pairs.panels(MVNdata[1:2])
 ```
+```{r}
+library(copula)
+n_trials <- 200
+norm_copula <- normalCopula(param = 0, dim = 2)
+multiV_dist <- mvdc(copula = norm_copula, margins = c("snorm", "snorm"),
+              paramMargins = list(list(mean = 0, sd = 1, xi = 3),
+                                  list(mean = 0, sd = 1, xi = 1)))
+
+corr_data <- rMvdc(n_trials,multiV_dist)
+plot(corr_data)
+```
+
+Lincoln's method works nicely. I like to use the copula package - I find it simpler to generalize and you can easily specify a variety of different marginal distributions - normal, log normal, gamma... 
+
+The copula is specified by normalCopula, param is the correlation coefficient, dim is the number of distributions.
+
+library(copula)
+n_trials <- 1000
+norm_copula <- normalCopula(param = -.8, dim = 2)
+multiV_dist <- mvdc(copula = norm_copula, margins = c("norm", "norm"),
+              paramMargins = list(list(mean = 2, sd = 1),
+                                  list(mean = 0, sd = 1)))
+corr_data <- rMvdc(n_trials,multiV_dist)
+plot(corr_data)

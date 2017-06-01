@@ -25,13 +25,14 @@ Let's load in data produced in my previous post on using Python from R. This is 
 #clean_data <- read_csv('C:\\Users\\Matt\\Documents\\Github\\ExploringERPs\\epochs_clean.csv', progress = FALSE) %>% 
  # gather(electrode,amplitude, -condition, -epoch, -time)
 
-clean_data <- read_csv('C:\\Users\\Matt\\Dropbox\\BlogStuff\\EEG_data\\epochs_GAT_clean.csv', progress = FALSE) %>%
+#clean_data <- read_csv('C:\\Users\\Matt\\Dropbox\\BlogStuff\\EEG_data\\epochs_GAT_clean.csv', progress = FALSE) %>%
+clean_data <- read_csv('F:\\Dropbox\\BlogStuff\\EEG_data\\epochs_GAT_clean.csv', progress = FALSE) %>%
   gather(electrode,amplitude, -condition, -epoch, -time) %>%
   spread(electrode,amplitude) %>%
   separate(condition, c("light","touch","report"), sep = "/")
 
-epoch_list <- select(clean_data, epoch, report)
-table(epoch_list$report)
+epoch_list <- select(clean_data, epoch, light)
+table(epoch_list$light)
 
 
 ```
@@ -44,9 +45,7 @@ What we want to do is fit a model to each timepoint in our data, and see when ex
 
 ```{r}
 fitControl <- trainControl(method = "cv",
-                           number = 5,
-                           classProbs = TRUE,
-                           summaryFunction = twoClassSummary
+                           number = 5
                            )
 
 z <- all_psd_three %>%
@@ -54,15 +53,16 @@ z <- all_psd_three %>%
   left_join(epoch_list, by = "epoch") %>%
   select(-epoch) %>%
   nest(-freqs) %>%
-  mutate(fit = map(data, ~train(report ~ ., data = .x, preProcess = "scale",
+  mutate(fit = map(data, ~train(light ~ ., data = .x, preProcess = c("center","scale"),
                                 method = "glmnet", family = "binomial", trControl = fitControl)))
 
 ZZ <- data.frame(Accuracy = map(z$fit,"resample") %>%
-                   map("ROC") %>%
+                   map("Accuracy") %>%
                    map_dbl(~mean(.x)), freqs = z$freqs)
 ZZ$freqs <- z$freqs
 
-ggplot(ZZ, aes(freqs, Accuracy))+geom_line()
+ZZ %>% filter(freqs > 4) %>%
+  ggplot(aes(freqs, Accuracy))+geom_line()+ylim(0,1)
 ```
 
 Another important test is generalization across time. We can take the model for a given timepoint and test how well it predicts class trialtype at other timepoints.
